@@ -1770,12 +1770,27 @@ public unsafe partial class Control :
     /// </summary>
     public static Color DefaultBackColor => SystemColors.Control;
 
-    /// <summary>
-    ///  Deriving classes can override this to configure a default cursor for their control.
-    ///  This is more efficient than setting the cursor in the control's constructor,
-    ///  and gives automatic support for ShouldSerialize and Reset in the designer.
-    /// </summary>
-    protected virtual Cursor DefaultCursor => Cursors.Default;
+        private protected static Color GetDefaultBackColor(ThemingSuggestion theming)
+        {
+            switch (theming)
+            {
+                case ThemingSuggestion.Blue:
+                    return Color.LightBlue;
+
+                case ThemingSuggestion.Dark:
+                    return Color.DarkGray;
+
+                default:
+                    return SystemColors.Control;
+            }
+        }
+
+        /// <summary>
+        ///  Deriving classes can override this to configure a default cursor for their control.
+        ///  This is more efficient than setting the cursor in the control's constructor,
+        ///  and gives automatic support for ShouldSerialize and Reset in the designer.
+        /// </summary>
+        protected virtual Cursor DefaultCursor => Cursors.Default;
 
     /// <summary>
     ///  The default Font of a generic top-level Control.  Subclasses may have

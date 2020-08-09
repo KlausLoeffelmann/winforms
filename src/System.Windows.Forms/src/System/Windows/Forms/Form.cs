@@ -154,6 +154,8 @@ public partial class Form : ContainerControl
 
     private VisualStyleRenderer? _sizeGripRenderer;
 
+    private ThemingSuggestion themingSuggestion = ThemingSuggestion.Normal;
+
     // Cache Form's size for the DPI. When Form is moved between the monitors with different DPI settings, we use
     // cached values to set the size matching the DPI on the Form instead of recalculating the size again. This help
     // preventing rounding error in size calculations with float DPI factor and rounding it to nearest integer.
@@ -2123,6 +2125,15 @@ public partial class Form : ContainerControl
         get => base.Text;
         set => base.Text = value;
     }
+
+    public ThemingSuggestion ThemingSuggestion
+    {
+        get => themingSuggestion;
+        set => themingSuggestion = value;
+    }
+
+    public AdornerDrawMode AdornerDrawMode { get; set; } = AdornerDrawMode.Normal;
+
 
     /// <summary>
     ///  Gets or sets a value indicating whether to display the form as a top-level
@@ -4156,6 +4167,12 @@ public partial class Form : ContainerControl
     protected virtual void OnInputLanguageChanging(InputLanguageChangingEventArgs e)
     {
         ((InputLanguageChangingEventHandler?)Events[EVENT_INPUTLANGCHANGEREQUEST])?.Invoke(this, e);
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    protected virtual void OnPaintNonClient(PaintEventArgs e)
+    {
+        //((PaintEventHandler)Events[s_paintEvent])?.Invoke(this, e);
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -6516,6 +6533,57 @@ public partial class Form : ContainerControl
         }
     }
 
+        private void WmNCPaint(ref Message m)
+        {
+            //Rectangle clip;
+
+            // Gdi32.HDC dc = User32.GetDCEx(m.HWnd, m.WParam, User32.DCX.WINDOW | User32.DCX.INTERSECTRGN);
+            // Gdi32.HDC dc = User32.GetDCEx(m.HWnd, m.WParam, User32.DCX.WINDOW | User32.DCX.INTERSECTRGN | User32.DCX.CACHE);
+            Gdi32.HDC dc = User32.GetWindowDC(Handle);
+
+            RECT lpRect = new RECT();
+            Gdi32.GetClipBox(dc, ref lpRect);
+            User32.ReleaseDC(Handle, dc);
+
+            m.Result = IntPtr.Zero;
+            //var pevent = new PaintEventArgs(
+            //    dc,
+            //    clip);
+
+            //PaintWithErrorHandling(pevent);
+        }
+
+        // Exceptions during painting are nasty, because paint events happen so often.
+        // So if user painting code has an issue, we make sure never to call it again,
+        // so as not to spam the end-user with exception dialogs.
+        private void PaintWithErrorHandling(PaintEventArgs e)
+        {
+            try
+            {
+                CacheTextInternal = true;
+                if (!GetState(States.ExceptionWhilePainting))
+                {
+                    bool exceptionThrown = true;
+                    try
+                    {
+                        OnPaintNonClient(e);
+                        exceptionThrown = false;
+                    }
+                    finally
+                    {
+                        if (exceptionThrown)
+                        {
+                            SetState(States.ExceptionWhilePainting, true);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                CacheTextInternal = false;
+            }
+        }
+
     /// <summary>
     ///  WM_SHOWWINDOW handler
     /// </summary>
@@ -6695,21 +6763,169 @@ public partial class Form : ContainerControl
                 // it's capture in response to a CAPTURECHANGED message, so we force
                 // capture away if no button is down.
 
-                if (Capture && MouseButtons == MouseButtons.None)
+                    if (Capture && MouseButtons == MouseButtons.None)
+                    {
+                        Capture = false;
+                    }
+                    break;
+                case User32.WM.GETDPISCALEDSIZE:
+                    Debug.Assert(PARAM.SignedLOWORD(m.WParam) == PARAM.SignedHIWORD(m.WParam), "Non-square pixels!");
+                    WmGetDpiScaledSize(ref m);
+                    break;
+                case User32.WM.DPICHANGED:
+                    WmDpiChanged(ref m);
+                    break;
+                case User32.WM.NCPAINT:
+                    if (AdornerDrawMode != AdornerDrawMode.Normal)
+                    {
+                        WmNCPaint(ref m);
+                    }
+                    else
+                    {
+                        base.WndProc(ref m);
+                    }
+                    break;
+
+                default:
+                    base.WndProc(ref m);
+                    break;
+            }
+        }
+
+        /// <summary>
+        ///  Represents a collection of controls on the form.
+        /// </summary>
+        public new class ControlCollection : Control.ControlCollection
+        {
+            private readonly Form owner;
+
+            /*C#r:protected*/
+
+            /// <summary>
+            ///  Initializes a new instance of the ControlCollection class.
+            /// </summary>
+            public ControlCollection(Form owner)
+            : base(owner)
+            {
+                this.owner = owner;
+            }
+
+            /// <summary>
+            ///  Adds a control
+            ///  to the form.
+            /// </summary>
+            public override void Add(Control value)
+            {
+                if (value is MdiClient && owner.ctlClient is null)
                 {
-                    Capture = false;
+                    if (!owner.TopLevel && !owner.DesignMode)
+                    {
+                        throw new ArgumentException(SR.MDIContainerMustBeTopLevel, nameof(value));
+                    }
+                    owner.AutoScroll = false;
+                    if (owner.IsMdiChild)
+                    {
+                        throw new ArgumentException(SR.FormMDIParentAndChild, nameof(value));
+                    }
+                    owner.ctlClient = (MdiClient)value;
                 }
 
-                break;
-            case PInvoke.WM_GETDPISCALEDSIZE:
-                WmGetDpiScaledSize(ref m);
-                break;
-            case PInvoke.WM_DPICHANGED:
-                WmDpiChanged(ref m);
-                break;
-            default:
-                base.WndProc(ref m);
-                break;
+                // make sure we don't add a form that has a valid mdi parent
+                //
+                if (value is Form && ((Form)value).MdiParentInternal != null)
+                {
+                    throw new ArgumentException(SR.FormMDIParentCannotAdd, nameof(value));
+                }
+
+                base.Add(value);
+
+                if (owner.ctlClient != null)
+                {
+                    owner.ctlClient.SendToBack();
+                }
+            }
+
+            /// <summary>
+            ///  Removes a control from the form.
+            /// </summary>
+            public override void Remove(Control value)
+            {
+                if (value == owner.ctlClient)
+                {
+                    owner.ctlClient = null;
+                }
+                base.Remove(value);
+            }
         }
+
+        // Class used to temporarily reset the owners of windows owned by this Form
+        // before its handle recreation, then setting them back to the new handle
+        // after handle recreation
+        private class EnumThreadWindowsCallback
+        {
+            private List<HandleRef> ownedWindows;
+
+            private readonly IntPtr _formHandle;
+
+            internal EnumThreadWindowsCallback(IntPtr formHandle)
+            {
+                this._formHandle = formHandle;
+            }
+
+            internal BOOL Callback(IntPtr hWnd)
+            {
+                HandleRef hRef = new HandleRef(null, hWnd);
+                IntPtr parent = User32.GetWindowLong(hRef, User32.GWL.HWNDPARENT);
+                if (parent == _formHandle)
+                {
+                    // Enumerated window is owned by this Form.
+                    // Store it in a list for further treatment.
+                    if (ownedWindows is null)
+                    {
+                        ownedWindows = new List<HandleRef>();
+                    }
+                    ownedWindows.Add(hRef);
+                }
+                return BOOL.TRUE;
+            }
+
+            // Resets the owner of all the windows owned by this Form before handle recreation.
+            internal void ResetOwners()
+            {
+                if (ownedWindows != null)
+                {
+                    foreach (HandleRef hRef in ownedWindows)
+                    {
+                        User32.SetWindowLong(hRef, User32.GWL.HWNDPARENT, NativeMethods.NullHandleRef);
+                    }
+                }
+            }
+
+            // Sets the owner of the windows back to this Form after its handle recreation.
+            internal void SetOwners(HandleRef hRefOwner)
+            {
+                if (ownedWindows != null)
+                {
+                    foreach (HandleRef hRef in ownedWindows)
+                    {
+                        User32.SetWindowLong(hRef, User32.GWL.HWNDPARENT, hRefOwner);
+                    }
+                }
+            }
+        }
+    }
+
+    public enum ThemingSuggestion
+    {
+        Normal=0,
+        Blue,
+        Dark
+    }
+
+    public enum AdornerDrawMode
+    {
+        Normal,
+        ApplyThemingSuggestion,
+        Custom
     }
 }

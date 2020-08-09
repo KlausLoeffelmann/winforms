@@ -1,3 +1,18 @@
+System.Windows.Forms.AdornerDrawMode
+System.Windows.Forms.AdornerDrawMode.ApplyThemingSuggestion = 1 -> System.Windows.Forms.AdornerDrawMode
+System.Windows.Forms.AdornerDrawMode.Custom = 2 -> System.Windows.Forms.AdornerDrawMode
+System.Windows.Forms.AdornerDrawMode.Normal = 0 -> System.Windows.Forms.AdornerDrawMode
+System.Windows.Forms.DrawItemEventArgs.Dispose() -> void
+System.Windows.Forms.Form.AdornerDrawMode.get -> System.Windows.Forms.AdornerDrawMode
+System.Windows.Forms.Form.AdornerDrawMode.set -> void
+System.Windows.Forms.Form.ThemingSuggestion.get -> System.Windows.Forms.ThemingSuggestion
+System.Windows.Forms.Form.ThemingSuggestion.set -> void
+System.Windows.Forms.ThemingSuggestion
+System.Windows.Forms.ThemingSuggestion.Blue = 1 -> System.Windows.Forms.ThemingSuggestion
+System.Windows.Forms.ThemingSuggestion.Dark = 2 -> System.Windows.Forms.ThemingSuggestion
+System.Windows.Forms.ThemingSuggestion.Normal = 0 -> System.Windows.Forms.ThemingSuggestion
+virtual System.Windows.Forms.DrawItemEventArgs.Dispose(bool disposing) -> void
+~virtual System.Windows.Forms.Form.OnPaintNonClient(System.Windows.Forms.PaintEventArgs e) -> void
 override System.Windows.Forms.ButtonBase.ButtonBaseAccessibleObject.KeyboardShortcut.get -> string?
 override System.Windows.Forms.ButtonBase.ButtonBaseAccessibleObject.Name.get -> string?
 override System.Windows.Forms.RadioButton.RadioButtonAccessibleObject.KeyboardShortcut.get -> string?
