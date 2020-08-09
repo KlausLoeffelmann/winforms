@@ -1770,18 +1770,18 @@ public unsafe partial class Control :
     /// </summary>
     public static Color DefaultBackColor => SystemColors.Control;
 
-        private protected static Color GetDefaultBackColor(ThemingSuggestion theming)
+        private protected static Color GetDefaultBackColor(ThemingMode theming)
         {
             switch (theming)
             {
-                case ThemingSuggestion.Blue:
+                case ThemingMode.Blue:
                     return Color.LightBlue;
 
-                case ThemingSuggestion.Dark:
+                case ThemingMode.Dark:
                     return Color.DarkGray;
 
                 default:
-                    return SystemColors.Control;
+                    return DefaultBackColor;
             }
         }
 

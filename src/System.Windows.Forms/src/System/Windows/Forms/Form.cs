@@ -154,7 +154,7 @@ public partial class Form : ContainerControl
 
     private VisualStyleRenderer? _sizeGripRenderer;
 
-    private ThemingSuggestion themingSuggestion = ThemingSuggestion.Normal;
+        private ThemingMode requestedTheme = ThemingMode.Normal;
 
     // Cache Form's size for the DPI. When Form is moved between the monitors with different DPI settings, we use
     // cached values to set the size matching the DPI on the Form instead of recalculating the size again. This help
@@ -2126,11 +2126,12 @@ public partial class Form : ContainerControl
         set => base.Text = value;
     }
 
-    public ThemingSuggestion ThemingSuggestion
-    {
-        get => themingSuggestion;
-        set => themingSuggestion = value;
-    }
+        [DefaultValue(ThemingMode.Normal)]
+        public ThemingMode RequestedTheme
+        {
+            get => requestedTheme;
+            set => requestedTheme = value;
+        }
 
     public AdornerDrawMode AdornerDrawMode { get; set; } = AdornerDrawMode.Normal;
 
@@ -6915,17 +6916,17 @@ public partial class Form : ContainerControl
         }
     }
 
-    public enum ThemingSuggestion
+    public enum ThemingMode
     {
-        Normal=0,
-        Blue,
-        Dark
+        Normal = 0,
+        Blue = 1,
+        Dark = 2
     }
 
     public enum AdornerDrawMode
     {
         Normal,
-        ApplyThemingSuggestion,
+        ApplyRequestedTheme,
         Custom
     }
 }

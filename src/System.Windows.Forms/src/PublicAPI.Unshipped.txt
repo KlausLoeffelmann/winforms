@@ -1,16 +1,16 @@
 System.Windows.Forms.AdornerDrawMode
-System.Windows.Forms.AdornerDrawMode.ApplyThemingSuggestion = 1 -> System.Windows.Forms.AdornerDrawMode
+System.Windows.Forms.AdornerDrawMode.ApplyRequestedTheme = 1 -> System.Windows.Forms.AdornerDrawMode
 System.Windows.Forms.AdornerDrawMode.Custom = 2 -> System.Windows.Forms.AdornerDrawMode
 System.Windows.Forms.AdornerDrawMode.Normal = 0 -> System.Windows.Forms.AdornerDrawMode
 System.Windows.Forms.DrawItemEventArgs.Dispose() -> void
 System.Windows.Forms.Form.AdornerDrawMode.get -> System.Windows.Forms.AdornerDrawMode
 System.Windows.Forms.Form.AdornerDrawMode.set -> void
-System.Windows.Forms.Form.ThemingSuggestion.get -> System.Windows.Forms.ThemingSuggestion
-System.Windows.Forms.Form.ThemingSuggestion.set -> void
-System.Windows.Forms.ThemingSuggestion
-System.Windows.Forms.ThemingSuggestion.Blue = 1 -> System.Windows.Forms.ThemingSuggestion
-System.Windows.Forms.ThemingSuggestion.Dark = 2 -> System.Windows.Forms.ThemingSuggestion
-System.Windows.Forms.ThemingSuggestion.Normal = 0 -> System.Windows.Forms.ThemingSuggestion
+System.Windows.Forms.Form.RequestedTheme.get -> System.Windows.Forms.ThemingMode
+System.Windows.Forms.Form.RequestedTheme.set -> void
+System.Windows.Forms.ThemingMode
+System.Windows.Forms.ThemingMode.Blue = 1 -> System.Windows.Forms.ThemingMode
+System.Windows.Forms.ThemingMode.Dark = 2 -> System.Windows.Forms.ThemingMode
+System.Windows.Forms.ThemingMode.Normal = 0 -> System.Windows.Forms.ThemingMode
 virtual System.Windows.Forms.DrawItemEventArgs.Dispose(bool disposing) -> void
 ~virtual System.Windows.Forms.Form.OnPaintNonClient(System.Windows.Forms.PaintEventArgs e) -> void
 override System.Windows.Forms.ButtonBase.ButtonBaseAccessibleObject.KeyboardShortcut.get -> string?
