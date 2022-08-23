@@ -11,7 +11,6 @@ using System.Runtime.Serialization;
 using Moq;
 using System.Windows.Forms.TestUtilities;
 using Xunit;
-using static Interop;
 using static Interop.Shell32;
 using static Interop.User32;
 using static Windows.Win32.System.Memory.GLOBAL_ALLOC_FLAGS;

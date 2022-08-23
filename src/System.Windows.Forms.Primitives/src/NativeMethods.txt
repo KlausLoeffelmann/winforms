@@ -36,6 +36,8 @@ DestroyWindow
 DROPDESCRIPTION
 DROPIMAGETYPE
 DuplicateHandle
+DwmSetWindowAttribute
+DWMWINDOWATTRIBUTE
 EndPaint
 EVENTMSG
 FDAP

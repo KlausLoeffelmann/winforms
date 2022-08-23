@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Windows.Forms;
 using static Interop;
 using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
+using HRESULT = Interop.HRESULT;
 
 namespace System.ComponentModel.Design
 {

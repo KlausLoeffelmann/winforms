@@ -2344,6 +2344,11 @@ namespace System.Windows.Forms
             }
         }
 
+        public Color WindowBorderColor { get; set; }
+        public int WindowBorderThickness { get; set; }
+        public Color WindowCaptionColor { get; set; }
+        public Color WindowCaptionTextColor { get; set; }
+
         /// <summary>
         ///  Gets or sets the form's window state.
         /// </summary>
