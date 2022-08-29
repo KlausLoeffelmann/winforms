@@ -421,7 +421,7 @@ namespace System.Windows.Forms
                 Point pW = default;
                 Size sWindowExt = default;
                 Size sViewportExt = default;
-                Gdi32.MM iMode = Gdi32.MM.TEXT;
+                HDC_MAP_MODE iMode = HDC_MAP_MODE.MM_TEXT;
 
                 if (!_control.IsHandleCreated)
                 {
@@ -440,11 +440,11 @@ namespace System.Windows.Forms
                     // use.
                     Gdi32.LPtoDP(hdc, ref rc, 2);
 
-                    iMode = Gdi32.SetMapMode(hdc, Gdi32.MM.ANISOTROPIC);
-                    Gdi32.SetWindowOrgEx(hdc, 0, 0, &pW);
-                    Gdi32.SetWindowExtEx(hdc, _control.Width, _control.Height, &sWindowExt);
-                    Gdi32.SetViewportOrgEx(hdc, rc.left, rc.top, &pVp);
-                    Gdi32.SetViewportExtEx(hdc, rc.right - rc.left, rc.bottom - rc.top, &sViewportExt);
+                    iMode = (HDC_MAP_MODE)PInvoke.SetMapMode(hdc, HDC_MAP_MODE.MM_ANISOTROPIC);
+                    PInvoke.SetWindowOrgEx(hdc, 0, 0, &pW);
+                    PInvoke.SetWindowExtEx(hdc, _control.Width, _control.Height, (SIZE*)&sWindowExt);
+                    PInvoke.SetViewportOrgEx(hdc, rc.left, rc.top, &pVp);
+                    PInvoke.SetViewportExtEx(hdc, rc.right - rc.left, rc.bottom - rc.top, (SIZE*)&sViewportExt);
                 }
 
                 // Now do the actual drawing.  We must ask all of our children to draw as well.
@@ -465,11 +465,11 @@ namespace System.Windows.Forms
                     // And clean up the DC
                     if (prcBounds is not null)
                     {
-                        Gdi32.SetWindowOrgEx(hdc, pW.X, pW.Y, null);
-                        Gdi32.SetWindowExtEx(hdc, sWindowExt.Width, sWindowExt.Height, null);
-                        Gdi32.SetViewportOrgEx(hdc, pVp.X, pVp.Y, null);
-                        Gdi32.SetViewportExtEx(hdc, sViewportExt.Width, sViewportExt.Height, null);
-                        Gdi32.SetMapMode(hdc, iMode);
+                        PInvoke.SetWindowOrgEx(hdc, pW.X, pW.Y, lppt: null);
+                        PInvoke.SetWindowExtEx(hdc, sWindowExt.Width, sWindowExt.Height, lpsz: null);
+                        PInvoke.SetViewportOrgEx(hdc, pVp.X, pVp.Y, lppt: null);
+                        PInvoke.SetViewportExtEx(hdc, sViewportExt.Width, sViewportExt.Height, lpsz: null);
+                        PInvoke.SetMapMode(hdc, iMode);
                     }
                 }
 
@@ -601,7 +601,7 @@ namespace System.Windows.Forms
                         pvt,
                         null,
                         null);
-                    if (hr.Succeeded())
+                    if (hr.Succeeded)
                     {
                         Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "IDispatch::Invoke succeeded. VT=" + pvt[0].GetType().FullName);
                         obj = pvt[0];
@@ -823,7 +823,7 @@ namespace System.Windows.Forms
                     HRESULT hr = inPlaceSite.CanInPlaceActivate();
                     if (hr != HRESULT.S_OK)
                     {
-                        if (hr.Succeeded())
+                        if (hr.Succeeded)
                         {
                             hr = HRESULT.E_FAIL;
                         }
@@ -848,7 +848,7 @@ namespace System.Windows.Forms
                     // We are entering a secure context here.
                     HWND hwndParent = default;
                     HRESULT hr = inPlaceSite.GetWindow((nint*)&hwndParent);
-                    if (!hr.Succeeded())
+                    if (!hr.Succeeded)
                     {
                         ThrowHr(hr);
                     }
@@ -933,7 +933,7 @@ namespace System.Windows.Forms
 
                     // we have to explicitly say we don't wany any border space.
                     HRESULT hr = _inPlaceFrame.SetBorderSpace(null);
-                    if (!hr.Succeeded() && hr != HRESULT.OLE_E_INVALIDRECT &&
+                    if (!hr.Succeeded && hr != HRESULT.OLE_E_INVALIDRECT &&
                         hr != HRESULT.INPLACE_E_NOTOOLSPACE && hr != HRESULT.E_NOTIMPL)
                     {
                         Marshal.ThrowExceptionForHR((int)hr);
@@ -942,7 +942,7 @@ namespace System.Windows.Forms
                     if (_inPlaceUiWindow is not null)
                     {
                         hr = _inPlaceFrame.SetBorderSpace(null);
-                        if (!hr.Succeeded() && hr != HRESULT.OLE_E_INVALIDRECT &&
+                        if (!hr.Succeeded && hr != HRESULT.OLE_E_INVALIDRECT &&
                             hr != HRESULT.INPLACE_E_NOTOOLSPACE && hr != HRESULT.E_NOTIMPL)
                         {
                             Marshal.ThrowExceptionForHR((int)hr);
@@ -1104,7 +1104,7 @@ namespace System.Windows.Forms
                     try
                     {
                         HRESULT hr = pPropBag.Read(props[i].Name, out object? obj, pErrorLog);
-                        if (hr.Succeeded() && obj is not null)
+                        if (hr.Succeeded && obj is not null)
                         {
                             Debug.Indent();
                             Debug.WriteLineIf(CompModSwitches.ActiveX.TraceInfo, "Property was in bag");
@@ -1347,7 +1347,7 @@ namespace System.Windows.Forms
                 {
                     // we have to explicitly say we don't wany any border space.
                     HRESULT hr = _inPlaceFrame.SetBorderSpace(null);
-                    if (!hr.Succeeded() && hr != HRESULT.INPLACE_E_NOTOOLSPACE && hr != HRESULT.E_NOTIMPL)
+                    if (!hr.Succeeded && hr != HRESULT.INPLACE_E_NOTOOLSPACE && hr != HRESULT.E_NOTIMPL)
                     {
                         Marshal.ThrowExceptionForHR((int)hr);
                     }

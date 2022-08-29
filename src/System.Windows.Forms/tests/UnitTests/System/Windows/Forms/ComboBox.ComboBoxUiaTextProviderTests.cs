@@ -401,7 +401,7 @@ namespace System.Windows.Forms.Tests
             {
                 using ComboBox comboBox = new ComboBox() { DropDownStyle = dropDownStyle };
                 ComboBox.ComboBoxUiaTextProvider provider = new ComboBox.ComboBoxUiaTextProvider(comboBox);
-                LOGFONTW expected = new LOGFONTW();
+                LOGFONTW expected = default;
 
                 LOGFONTW actual = provider.Logfont;
 

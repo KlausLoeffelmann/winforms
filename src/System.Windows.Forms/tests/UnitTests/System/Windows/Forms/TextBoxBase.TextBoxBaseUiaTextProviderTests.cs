@@ -373,7 +373,7 @@ namespace System.Windows.Forms.Tests
             using TextBoxBase textBoxBase = new SubTextBoxBase();
             TextBoxBaseUiaTextProvider provider = new TextBoxBaseUiaTextProvider(textBoxBase);
 
-            LOGFONTW expected = new LOGFONTW();
+            LOGFONTW expected = default;
             LOGFONTW actual = provider.Logfont;
             Assert.True(string.IsNullOrEmpty(actual.FaceName.ToString()));
             Assert.Equal(expected, actual);

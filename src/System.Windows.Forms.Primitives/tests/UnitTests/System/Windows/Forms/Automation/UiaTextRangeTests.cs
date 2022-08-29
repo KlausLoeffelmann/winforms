@@ -974,7 +974,7 @@ This is the line 3";
         [InlineData("Some test text")]
         public void UiaTextRange_private_GetFontName_ReturnsExpectedValue(string faceName)
         {
-            LOGFONTW logfont = new LOGFONTW
+            LOGFONTW logfont = new()
             {
                 FaceName = faceName
             };
@@ -1019,7 +1019,7 @@ This is the line 3";
         [InlineData(FW.THIN)]
         public void UiaTextRange_private_GetFontWeight_ReturnsCorrectValue(object fontWeight)
         {
-            LOGFONTW logfont = new LOGFONTW() { lfWeight = (FW)fontWeight };
+            LOGFONTW logfont = new() { lfWeight = (int)fontWeight };
             FW actual = StaticNullTextRange.TestAccessor().GetFontWeight(logfont);
             Assert.Equal(fontWeight, actual);
         }

@@ -47,13 +47,13 @@ internal partial class Interop
                 }
             }
 
-            HRESULT Shell32.IShellItemArray.GetPropertyDescriptionList(ref Shell32.PROPERTYKEY keyType, ref Guid riid, out IntPtr ppv)
+            HRESULT Shell32.IShellItemArray.GetPropertyDescriptionList(ref PROPERTYKEY keyType, ref Guid riid, out IntPtr ppv)
             {
-                fixed (Shell32.PROPERTYKEY* keyType_local = &keyType)
+                fixed (PROPERTYKEY* keyType_local = &keyType)
                 fixed (Guid* riid_local = &riid)
                 fixed (IntPtr* ppv_local = &ppv)
                 {
-                    return ((delegate* unmanaged<IntPtr, Shell32.PROPERTYKEY*, Guid*, IntPtr*, HRESULT>)(*(*(void***)_wrappedInstance + 5)))
+                    return ((delegate* unmanaged<IntPtr, PROPERTYKEY*, Guid*, IntPtr*, HRESULT>)(*(*(void***)_wrappedInstance + 5)))
                         (_wrappedInstance, keyType_local, riid_local, ppv_local);
                 }
             }
@@ -72,7 +72,7 @@ internal partial class Interop
                 fixed (uint* pdwNumItems_local = &pdwNumItems)
                 {
                     ((delegate* unmanaged<IntPtr, uint*, HRESULT>)(*(*(void***)_wrappedInstance + 7)))
-                        (_wrappedInstance, pdwNumItems_local).ThrowIfFailed();
+                        (_wrappedInstance, pdwNumItems_local).ThrowOnFailure();
                 }
             }
 
@@ -80,7 +80,7 @@ internal partial class Interop
             {
                 IntPtr ppsi_local;
                 ((delegate* unmanaged<IntPtr, uint, IntPtr*, HRESULT>)(*(*(void***)_wrappedInstance + 8)))
-                    (_wrappedInstance, dwIndex, &ppsi_local).ThrowIfFailed();
+                    (_wrappedInstance, dwIndex, &ppsi_local).ThrowOnFailure();
                 ppsi = (Shell32.IShellItem)WinFormsComWrappers.Instance.GetOrCreateObjectForComInstance(ppsi_local, CreateObjectFlags.Unwrap);
             }
 

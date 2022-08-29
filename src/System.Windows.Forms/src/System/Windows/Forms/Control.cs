@@ -887,7 +887,7 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    backBrush = Gdi32.CreateSolidBrush(ColorTranslator.ToWin32(color));
+                    backBrush = PInvoke.CreateSolidBrush((uint)ColorTranslator.ToWin32(color));
                     SetState(States.OwnCtlBrush, true);
                 }
 
@@ -5429,7 +5429,7 @@ namespace System.Windows.Forms
             {
                 Ole32.IDropSource dropSource = new DropSource(this, dataObject, dragImage, cursorOffset, useDefaultDragImage);
                 HRESULT hr = Ole32.DoDragDrop(dataObject, dropSource, (Ole32.DROPEFFECT)allowedEffects, out finalEffect);
-                if (!hr.Succeeded())
+                if (!hr.Succeeded)
                 {
                     return DragDropEffects.None;
                 }
@@ -6424,8 +6424,8 @@ namespace System.Windows.Forms
             // NOTE: this message may not have originally been sent to this HWND.
             if (!GetStyle(ControlStyles.UserPaint))
             {
-                Gdi32.SetTextColor(dc, ColorTranslator.ToWin32(ForeColor));
-                Gdi32.SetBkColor(dc, ColorTranslator.ToWin32(BackColor));
+                PInvoke.SetTextColor(dc, (uint)ColorTranslator.ToWin32(ForeColor));
+                PInvoke.SetBkColor(dc, (uint)ColorTranslator.ToWin32(BackColor));
                 return BackColorBrush;
             }
 
@@ -10278,11 +10278,11 @@ namespace System.Windows.Forms
 
                     if (accept)
                     {
-                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, "Registering as drop target: " + Handle.ToString());
+                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, $"Registering as drop target: {Handle}");
 
                         // Register
                         HRESULT n = Ole32.RegisterDragDrop(this, new DropTarget(this));
-                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, "   ret:" + n.ToString(CultureInfo.CurrentCulture));
+                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, $"   ret:{n}");
                         if (n != HRESULT.S_OK && n != HRESULT.DRAGDROP_E_ALREADYREGISTERED)
                         {
                             throw Marshal.GetExceptionForHR((int)n)!;
@@ -10290,11 +10290,11 @@ namespace System.Windows.Forms
                     }
                     else
                     {
-                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, "Revoking drop target: " + Handle.ToString());
+                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, $"Revoking drop target: {Handle}");
 
                         // Revoke
                         HRESULT n = Ole32.RevokeDragDrop(new HandleRef(this, Handle));
-                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, "   ret:" + n.ToString(CultureInfo.InvariantCulture));
+                        Debug.WriteLineIf(CompModSwitches.DragDrop.TraceInfo, $"   ret:{n}");
                         if (n != HRESULT.S_OK && n != HRESULT.DRAGDROP_E_NOTREGISTERED)
                         {
                             throw Marshal.GetExceptionForHR((int)n)!;
