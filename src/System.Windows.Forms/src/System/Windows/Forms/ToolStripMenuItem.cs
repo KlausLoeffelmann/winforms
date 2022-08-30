@@ -835,7 +835,7 @@ namespace System.Windows.Forms
                     g.DrawRectangle(SystemPens.Control, 0, 0, image.Width - 1, image.Height - 1);
                 }
 
-                image.MakeTransparent(SystemColors.Control);
+                image.MakeTransparent(Application.SystemColors.Control);
                 return image;
             }
 
@@ -1097,7 +1097,7 @@ namespace System.Windows.Forms
             Graphics g = e.Graphics;
             renderer.DrawMenuItemBackground(new ToolStripItemRenderEventArgs(g, this));
 
-            Color textColor = SystemColors.MenuText;
+            Color textColor = Application.SystemColors.MenuText;
             if (IsForeColorSet)
             {
                 textColor = ForeColor;
@@ -1106,11 +1106,11 @@ namespace System.Windows.Forms
             {
                 if (Selected || Pressed)
                 {
-                    textColor = SystemColors.HighlightText;
+                    textColor = Application.SystemColors.HighlightText;
                 }
                 else
                 {
-                    textColor = SystemColors.MenuText;
+                    textColor = Application.SystemColors.MenuText;
                 }
             }
 
@@ -1152,8 +1152,8 @@ namespace System.Windows.Forms
                 if (HasDropDownItems)
                 {
                     ArrowDirection arrowDir = (rightToLeft) ? ArrowDirection.Left : ArrowDirection.Right;
-                    Color arrowColor = (Selected || Pressed) ? SystemColors.HighlightText : SystemColors.MenuText;
-                    arrowColor = (Enabled) ? arrowColor : SystemColors.ControlDark;
+                    Color arrowColor = (Selected || Pressed) ? Application.SystemColors.HighlightText : Application.SystemColors.MenuText;
+                    arrowColor = (Enabled) ? arrowColor : Application.SystemColors.ControlDark;
                     renderer.DrawArrow(new ToolStripArrowRenderEventArgs(g, this, menuItemInternalLayout.ArrowRectangle, arrowColor, arrowDir));
                 }
 

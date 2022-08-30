@@ -1249,7 +1249,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (_isEnableVisualStyleBackgroundSet || ((RawBackColor.IsEmpty) && (BackColor == SystemColors.Control)))
+                if (_isEnableVisualStyleBackgroundSet || ((RawBackColor.IsEmpty) && (BackColor == Application.SystemColors.Control)))
                 {
                     return _enableVisualStyleBackground;
                 }

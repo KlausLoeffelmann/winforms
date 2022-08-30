@@ -65,6 +65,7 @@ namespace System.Windows.Forms
 
         // Used to avoid recursive exit
         private static bool s_exiting;
+        private static ThemedSystemColors s_systemColors;
 
         /// <summary>
         ///  This class is static, there is no need to ever create it.
@@ -298,7 +299,7 @@ namespace System.Windows.Forms
                         return DarkMode.NotSupported;
                     }
 
-                    return DarkMode.Inherits;
+                    return DarkMode.Disabled;
                 }
 
                 return s_darkMode.Value;
@@ -316,6 +317,8 @@ namespace System.Windows.Forms
 
         private static bool SetDefaultDarkModeCore(DarkMode darkMode)
         {
+            s_systemColors = null;
+            
             if (EnvironmentDarkMode == DarkMode.NotSupported)
             {
                 s_darkMode = DarkMode.NotSupported;
@@ -357,6 +360,33 @@ namespace System.Windows.Forms
                     1 => DarkMode.Disabled,
                     _ => DarkMode.NotSupported
                 };
+            }
+        }
+
+        internal static bool IsDarkModeEnabled => DefaultDarkMode switch
+        {
+            DarkMode.Enabled => true,
+            DarkMode.Disabled => false,
+            _ => EnvironmentDarkMode switch
+            {
+                DarkMode.Enabled => true,
+                DarkMode.Disabled => false,
+                _ => throw new InvalidOperationException("DefaultDarkMode is not set.")
+            }
+        };
+
+        internal static ThemedSystemColors SystemColors
+        {
+            get
+            {
+                if (s_systemColors is null)
+                {
+                    s_systemColors = IsDarkModeEnabled
+                        ? (ThemedSystemColors)new DarkThemedSystemColors()
+                        : new LightThemedSystemColors();
+                }
+
+                return s_systemColors;
             }
         }
 

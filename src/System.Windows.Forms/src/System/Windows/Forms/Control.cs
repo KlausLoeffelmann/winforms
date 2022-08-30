@@ -1904,7 +1904,7 @@ namespace System.Windows.Forms
         ///  The default BackColor of a generic top-level Control.  Subclasses may have
         ///  different defaults.
         /// </summary>
-        public static Color DefaultBackColor => SystemColors.Control;
+        public static Color DefaultBackColor => Application.SystemColors.Control;
 
         /// <summary>
         ///  Deriving classes can override this to configure a default cursor for their control.
@@ -1935,7 +1935,7 @@ namespace System.Windows.Forms
         ///  The default ForeColor of a generic top-level Control.  Subclasses may have
         ///  different defaults.
         /// </summary>
-        public static Color DefaultForeColor => SystemColors.ControlText;
+        public static Color DefaultForeColor => Application.SystemColors.ControlText;
 
         protected virtual Padding DefaultMargin => CommonProperties.DefaultMargin;
 
@@ -1981,7 +1981,7 @@ namespace System.Windows.Forms
                         if (control is null)
                         {
                             // Don't know what to do, this seems good as anything
-                            color = SystemColors.Control;
+                            color = Application.SystemColors.Control;
                             break;
                         }
 
@@ -8907,7 +8907,7 @@ namespace System.Windows.Forms
                 // For whatever reason, our parent can't paint our background, but we need some kind of background
                 // since we're transparent.
                 using DeviceContextHdcScope hdcNoParent = new(e);
-                using PInvoke.CreateBrushScope hbrush = new(SystemColors.Control);
+                using PInvoke.CreateBrushScope hbrush = new(Application.SystemColors.Control);
                 hdcNoParent.FillRectangle(rectangle, hbrush);
                 return;
             }

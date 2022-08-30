@@ -610,7 +610,13 @@ namespace System.Windows.Forms
                 case ToolStripManagerRenderMode.System:
                     return new ToolStripSystemRenderer(isDefault: true);
                 case ToolStripManagerRenderMode.Professional:
+                    if (Application.IsDarkModeEnabled)
+                    {
+                        return new ToolStripProfessionalRenderer(new DarkProfessionalColors());
+                    }
+                    
                     return new ToolStripProfessionalRenderer(isDefault: true);
+                    
                 case ToolStripManagerRenderMode.Custom:
                 default:
                     return new ToolStripSystemRenderer(isDefault: true);
