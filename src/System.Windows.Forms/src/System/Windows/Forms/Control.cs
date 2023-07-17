@@ -10853,9 +10853,9 @@ public unsafe partial class Control :
                 CreateControl();
             }
 
-                UpdateRoot();
-            }
+            UpdateRoot();
         }
+    }
 
     private static unsafe void PrepareDarkMode(HWND hwnd, bool darkModeEnabled)
     {
