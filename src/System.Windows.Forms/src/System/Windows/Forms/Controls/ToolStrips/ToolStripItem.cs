@@ -1880,7 +1880,6 @@ public abstract partial class ToolStripItem :
     [DefaultValue(null)]
     [SRCategory(nameof(SR.CatData))]
     [Localizable(false)]
-    [Bindable(true)]
     [SRDescription(nameof(SR.ToolStripItemTagDescr))]
     [TypeConverter(typeof(StringConverter))]
     public object? Tag
@@ -1892,6 +1891,7 @@ public abstract partial class ToolStripItem :
     /// <summary>
     ///  The text of the item
     /// </summary>
+    [Bindable(true)]
     [DefaultValue("")]
     [SRCategory(nameof(SR.CatAppearance))]
     [Localizable(true)]
