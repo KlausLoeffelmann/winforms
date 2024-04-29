@@ -214,9 +214,9 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
     /// </summary>
     [Bindable(true)]
     [Browsable(true)]
-    [DefaultValue("")]
+    [DefaultValue(null)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
-    [SRCategory(nameof(SR.CatData))]
+    [TypeConverter(typeof(StringConverter))]
     [SRDescription(nameof(SR.CommandComponentCommandParameterDescr))]
     public object? CommandParameter
     {

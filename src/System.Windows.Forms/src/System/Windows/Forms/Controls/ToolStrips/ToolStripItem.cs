@@ -455,8 +455,9 @@ public abstract partial class ToolStripItem :
     /// </summary>
     [Bindable(true)]
     [Browsable(true)]
-    [DefaultValue("")]
+    [DefaultValue(null)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    [TypeConverter(typeof(StringConverter))]
     [SRCategory(nameof(SR.CatData))]
     [SRDescription(nameof(SR.CommandComponentCommandParameterDescr))]
     public object? CommandParameter
