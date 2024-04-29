@@ -339,9 +339,11 @@ internal static class Formatter
         // If explicit type converters not provided, supply default ones instead
         //
 
-        targetConverter ??= targetTypeTypeConverter;
+        if (targetTypeTypeConverter is not null)
+            targetConverter = targetTypeTypeConverter;
 
-        sourceConverter ??= sourceTypeTypeConverter;
+        if (sourceTypeTypeConverter is not null)
+            sourceConverter = sourceTypeTypeConverter;
 
         //
         // Standardized conversions

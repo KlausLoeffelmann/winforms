@@ -454,8 +454,9 @@ public abstract partial class ToolStripItem :
     ///  which is assigned to the <see cref="Command"/> property.
     /// </summary>
     [Bindable(true)]
-    [Browsable(false)]
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    [Browsable(true)]
+    [DefaultValue("")]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
     [SRCategory(nameof(SR.CatData))]
     [SRDescription(nameof(SR.CommandComponentCommandParameterDescr))]
     public object? CommandParameter
