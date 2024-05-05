@@ -82,9 +82,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="System\Windows\Forms\Control_InvokeAsync.cs">
-      <SubType>Component</SubType>
-    </Compile>
-  </ItemGroup>
 </Project>
