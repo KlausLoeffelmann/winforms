@@ -22,7 +22,7 @@ namespace MyProject
         static void Main()
         {
              ApplicationConfiguration.Initialize();
-        }
+        }P
     }
 }";
     private const string SourceCompilationFailed = @"
