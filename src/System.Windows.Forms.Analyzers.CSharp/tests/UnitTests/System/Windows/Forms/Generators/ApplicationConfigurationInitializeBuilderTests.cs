@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Windows.Forms.Analyzers;
+using System.Windows.Forms.CSharp.Generators.ApplicationConfiguration;
 using VerifyXunit;
 using Xunit;
 using static System.Windows.Forms.Analyzers.ApplicationConfig;
