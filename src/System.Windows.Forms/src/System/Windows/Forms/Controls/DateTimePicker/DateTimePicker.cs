@@ -25,22 +25,22 @@ public partial class DateTimePicker : Control
     /// <summary>
     ///  Specifies the default title back color. This field is read-only.
     /// </summary>
-    protected static readonly Color DefaultTitleBackColor = Application.ApplicationColors.ActiveCaption;
+    protected static readonly Color DefaultTitleBackColor = ControlSystemColors.Default.ActiveCaption;
 
     /// <summary>
     ///  Specifies the default foreground color. This field is read-only.
     /// </summary>
-    protected static readonly Color DefaultTitleForeColor = Application.ApplicationColors.ActiveCaptionText;
+    protected static readonly Color DefaultTitleForeColor = ControlSystemColors.Default.ActiveCaptionText;
 
     /// <summary>
     ///  Specifies the default month background color. This field is read-only.
     /// </summary>
-    protected static readonly Color DefaultMonthBackColor = Application.ApplicationColors.Window;
+    protected static readonly Color DefaultMonthBackColor = ControlSystemColors.Default.Window;
 
     /// <summary>
     ///  Specifies the default trailing foreground color. This field is read-only.
     /// </summary>
-    protected static readonly Color DefaultTrailingForeColor = Application.ApplicationColors.GrayText;
+    protected static readonly Color DefaultTrailingForeColor = ControlSystemColors.Default.GrayText;
 
     private static readonly object s_formatChangedEvent = new();
 
@@ -127,12 +127,7 @@ public partial class DateTimePicker : Control
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override Color BackColor
     {
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
-        get => ShouldSerializeBackColor()
-            || IsDarkModeEnabled
-                ? base.BackColor
-                : Application.ApplicationColors.Window;
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
+        get => ShouldSerializeBackColor() ? base.BackColor : Drawing.SystemColors.Window;
         set => base.BackColor = value;
     }
 
@@ -493,13 +488,7 @@ public partial class DateTimePicker : Control
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override Color ForeColor
     {
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
-        get => ShouldSerializeForeColor()
-            || IsDarkModeEnabled
-                ? base.ForeColor
-                : Application.ApplicationColors.WindowText;
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
-
+        get => ShouldSerializeForeColor() ? base.ForeColor : Drawing.SystemColors.WindowText;
         set => base.ForeColor = value;
     }
 

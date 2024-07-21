@@ -907,7 +907,14 @@ public partial class TextBox : TextBoxBase
             }
         }
 
-        TextRenderer.DrawTextInternal(hdc, PlaceholderText, Font, rectangle, Application.ApplicationColors.GrayText, TextRenderer.DefaultQuality, flags);
+        TextRenderer.DrawTextInternal(
+            hdc: hdc,
+            text: PlaceholderText,
+            font: Font,
+            bounds: rectangle,
+            foreColor: SystemColors.GrayText,
+            fontQuality: TextRenderer.DefaultQuality,
+            flags: flags);
     }
 
     protected override unsafe void WndProc(ref Message m)

@@ -145,7 +145,9 @@ public unsafe partial class Control :
     private static readonly object s_marginChangedEvent = new();
     private protected static readonly object s_paddingChangedEvent = new();
     private static readonly object s_previewKeyDownEvent = new();
-    private static readonly object s_dataContextEvent = new();
+    private static readonly object s_dataContextChangedEvent = new();
+    private static readonly object s_darkModeChangedEvent = new();
+    private static readonly object s_visualStylesModeChangedEvent = new();
 
     private static MessageId s_threadCallbackMessage;
     private static ContextCallback? s_invokeMarshaledCallbackHelperDelegate;
@@ -288,6 +290,12 @@ public unsafe partial class Control :
 
     // Inform whether the AnchorsInfo needs to be reevaluated, especially when the control's bounds have been altered explicitly.
     internal bool _forceAnchorCalculations;
+
+    // Cache/lookup for SystemPens used in dark mode.
+    private static readonly Dictionary<KnownColor, Pen> s_darkModeSystemPenCache = [];
+
+    // Cache/lookup for SystemBrushes used in dark mode.
+    private static readonly Dictionary<KnownColor, SolidBrush> s_darkModeSystemBrushCache = [];
 
     internal byte LayoutSuspendCount { get; private set; }
 
@@ -715,14 +723,14 @@ public unsafe partial class Control :
             Color color = BackColor;
             HBRUSH backBrush;
 
-            if (color.IsSystemColor)
+            if (color.IsSystemColor && !IsDarkModeEnabled)
             {
                 backBrush = PInvoke.GetSysColorBrush(color);
                 SetState(States.OwnCtlBrush, false);
             }
             else
             {
-                backBrush = PInvoke.CreateSolidBrush((COLORREF)(uint)ColorTranslator.ToWin32(color));
+                backBrush = PInvoke.CreateSolidBrush((COLORREF)(uint)ColorTranslator.ToWin32(AdaptForDarkMode(color)));
                 SetState(States.OwnCtlBrush, true);
             }
 
@@ -1528,7 +1536,7 @@ public unsafe partial class Control :
                 return cursor;
             }
 
-            // We only do ambients for things with "Cursors.Default"
+            // We only do ambient for things with "Cursors.Default"
             // as their default.
             Cursor localDefault = DefaultCursor;
             if (localDefault != Cursors.Default)
@@ -1620,7 +1628,7 @@ public unsafe partial class Control :
     /// </summary>
     /// <value>
     ///  The dark mode for the control. The default value is <see cref="DarkMode.Inherits"/>. This property is ambient.
-    ///  Deriving classes should override <see cref="SetDarkModeCore(DarkMode)"/> to implement their own dark-mode detection logic.
+    ///  Deriving classes should override <see cref="OnDarkmodeChanged(DarkMode)"/> to implement their own dark-mode detection logic.
     /// </value>
     [SRCategory(nameof(SR.CatAppearance))]
     [EditorBrowsable(EditorBrowsableState.Always)]
@@ -1635,13 +1643,11 @@ public unsafe partial class Control :
         set => SetDarkMode(value);
     }
 
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
     private bool ShouldSerializeDarkMode()
         => DarkMode != DefaultDarkMode;
 
     private void ResetDarkMode()
         => DarkMode = DefaultDarkMode;
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
 
     /// <summary>
     ///  Tests, if the control is currently in dark mode. This property is ambient. Inherited controls can return false,
@@ -1656,7 +1662,7 @@ public unsafe partial class Control :
             {
                 // If we inherit, it's the parent's dark-mode, otherwise it's the value we have.
                 return (DarkMode == DarkMode.Inherits
-                    && (ParentInternal?.IsDarkModeEnabled ?? false))
+                    && (ParentInternal?.IsDarkModeEnabled ?? Application.IsDarkModeEnabled))
                     || DarkMode == DarkMode.Enabled;
             }
             else
@@ -1696,7 +1702,7 @@ public unsafe partial class Control :
                 Properties.SetObject(s_darkModeProperty, darkMode);
             }
 
-            SetDarkModeCore(darkMode);
+            OnDarkModeChanged(EventArgs.Empty);
 
             if (IsHandleCreated)
             {
@@ -1709,13 +1715,116 @@ public unsafe partial class Control :
         }
     }
 
-    /// <summary>
-    ///  Inherited classes should override this method to implement their own dark-mode changed logic, if they need it.
-    /// </summary>
-    /// <param name="darkModeSetting">A value of type <see cref="DarkMode"/> with the new dark-mode setting.</param>
-    /// <returns><see langword="true"/>, if the setting succeeded, otherwise <see langword="false"/>.</returns>
     [Experimental("WFO9001")]
-    protected virtual bool SetDarkModeCore(DarkMode darkModeSetting) => true;
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    protected virtual void OnDarkModeChanged(EventArgs e)
+    {
+        if (GetAnyDisposingInHierarchy())
+        {
+            return;
+        }
+
+        if (Events[s_darkModeChangedEvent] is EventHandler eventHandler)
+        {
+            eventHandler(this, e);
+        }
+
+        ControlCollection? controlsCollection = (ControlCollection?)Properties.GetObject(s_controlsCollectionProperty);
+        if (controlsCollection is not null)
+        {
+            for (int i = 0; i < controlsCollection.Count; i++)
+            {
+                controlsCollection[i].OnParentDarkModeChanged(e);
+            }
+        }
+    }
+
+    [Experimental("WFO9001")]
+    public ControlSystemColors SystemColors =>
+        IsDarkModeEnabled
+        ? ControlSystemColors.DefaultDarkMode
+        : ControlSystemColors.Default;
+
+    /// <summary>
+    ///  Converts the specific system color to dark mode if dark mode is enabled.
+    /// </summary>
+    /// <param name="color"></param>
+    /// <returns>The system color translated to dark mode.</returns>
+    internal Color AdaptForDarkMode(Color color)
+    {
+        if (!IsDarkModeEnabled || !color.IsSystemColor)
+        {
+            return color;
+        }
+
+        // This throws, if the color is not a system color.
+        return ControlSystemColors.GetAdaptedDarkModeColorFromKnownColor(color.ToKnownColor(), IsDarkModeEnabled);
+    }
+
+    /// <summary>
+    ///  Converts the specific system pen to its dark mode equivalent if dark mode is enabled, and cashes it.
+    /// </summary>
+    /// <param name="pen">The existing SystemPen to convert.</param>
+    /// <returns></returns>
+    internal Pen AdaptForDarkMode(Pen pen)
+    {
+        if (!IsDarkModeEnabled)
+        {
+            return pen;
+        }
+
+        KnownColor penColor = pen.Color.ToKnownColor();
+
+        // We need to lookup the Pen, should it exist in the cache, or create a new one and cache it:
+        if (s_darkModeSystemPenCache.TryGetValue(penColor, out Pen? darkModePen))
+        {
+            return darkModePen;
+        }
+
+        Pen newPen = new Pen(AdaptForDarkMode(pen.Color), pen.Width)
+        {
+            Alignment = pen.Alignment,
+            CompoundArray = pen.CompoundArray,
+            DashCap = pen.DashCap,
+            DashOffset = pen.DashOffset,
+            DashPattern = pen.DashPattern,
+            DashStyle = pen.DashStyle,
+            EndCap = pen.EndCap,
+            LineJoin = pen.LineJoin,
+            MiterLimit = pen.MiterLimit,
+            StartCap = pen.StartCap
+        };
+
+        s_darkModeSystemPenCache.Add(penColor, newPen);
+
+        return newPen;
+    }
+
+    /// <summary>
+    ///  Converts the specific system pen to its dark mode equivalent if dark mode is enabled, and cashes it.
+    /// </summary>
+    /// <param name="brush"></param>
+    /// <returns></returns>
+    internal Brush AdaptForDarkMode(Brush brush)
+    {
+        if (brush is not SolidBrush solidBrush || !IsDarkModeEnabled)
+        {
+            return brush;
+        }
+
+        KnownColor brushColor = solidBrush.Color.ToKnownColor();
+
+        // We need to lookup the Pen, should it exist in the cache, or create a new one and cache it:
+        if (s_darkModeSystemBrushCache.TryGetValue(brushColor, out SolidBrush? darkModeBrush))
+        {
+            return darkModeBrush;
+        }
+
+        SolidBrush newBrush = new SolidBrush(AdaptForDarkMode(solidBrush.Color));
+
+        s_darkModeSystemBrushCache.Add(brushColor, newBrush);
+        return newBrush;
+    }
 
     /// <summary>
     ///  Determines whether the control supports dark mode.
@@ -1732,7 +1841,7 @@ public unsafe partial class Control :
     ///  The default BackColor of a generic top-level Control.  Subclasses may have
     ///  different defaults.
     /// </summary>
-    public static Color DefaultBackColor => Application.ApplicationColors.Control;
+    public static Color DefaultBackColor => ControlSystemColors.Default.Control;
 
     /// <summary>
     ///  Deriving classes can override this to configure a default cursor for their control.
@@ -1763,7 +1872,7 @@ public unsafe partial class Control :
     ///  The default ForeColor of a generic top-level Control.  Subclasses may have
     ///  different defaults.
     /// </summary>
-    public static Color DefaultForeColor => Application.ApplicationColors.ControlText;
+    public static Color DefaultForeColor => ControlSystemColors.Default.ControlText;
 
     protected virtual Padding DefaultMargin => CommonProperties.DefaultMargin;
 
@@ -1803,7 +1912,7 @@ public unsafe partial class Control :
             Color color = BackColor;
             if (color.A != 0)
             {
-                return color;
+                return AdaptForDarkMode(color);
             }
 
             Control? control = ParentInternal;
@@ -1813,7 +1922,7 @@ public unsafe partial class Control :
                 if (control is null)
                 {
                     // Don't know what to do, this seems good as anything
-                    color = SystemColors.Control;
+                    color = Drawing.SystemColors.Control;
                     break;
                 }
 
@@ -1821,7 +1930,7 @@ public unsafe partial class Control :
                 control = control.ParentInternal;
             }
 
-            return color;
+            return AdaptForDarkMode(color);
         }
     }
 
@@ -3207,7 +3316,8 @@ public unsafe partial class Control :
                 newAmbients = value.GetService<AmbientProperties>();
             }
 
-            // If the ambients changed, compare each property.
+            // If the ambient properties have changed, compare each property.
+            // TODO (RC1): We need to amend DataContext, DarkMode, VisualStylesMode
             if (oldAmbients != newAmbients)
             {
                 bool checkFont = !Properties.ContainsObject(s_fontProperty);
@@ -4040,8 +4150,22 @@ public unsafe partial class Control :
     [SRDescription(nameof(SR.ControlDataContextChangedDescr))]
     public event EventHandler? DataContextChanged
     {
-        add => Events.AddHandler(s_dataContextEvent, value);
-        remove => Events.RemoveHandler(s_dataContextEvent, value);
+        add => Events.AddHandler(s_dataContextChangedEvent, value);
+        remove => Events.RemoveHandler(s_dataContextChangedEvent, value);
+    }
+
+    /// <summary>
+    ///  Occurs when the value of the <see cref="DarkMode"/> property changes.
+    /// </summary>
+    [SRCategory(nameof(SR.CatAppearance))]
+    [Browsable(true)]
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    // [SRDescription(nameof(SR.ControlDarkModeChangedDescr))]
+    [SRDescription("Darkmode Description.")]
+    public event EventHandler? DarkModeChanged
+    {
+        add => Events.AddHandler(s_darkModeChangedEvent, value);
+        remove => Events.RemoveHandler(s_darkModeChangedEvent, value);
     }
 
     [SRCategory(nameof(SR.CatDragDrop))]
@@ -4513,6 +4637,20 @@ public unsafe partial class Control :
     {
         add => Events.AddHandler(s_validatedEvent, value);
         remove => Events.RemoveHandler(s_validatedEvent, value);
+    }
+
+    /// <summary>
+    ///  Occurs when the value of the <see cref="VisualStylesMode"/> property changes.
+    /// </summary>
+    [SRCategory(nameof(SR.CatAppearance))]
+    [Browsable(true)]
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    // [SRDescription(nameof(SR.ControlVisualStylesModeChangedDescr))]
+    [SRDescription("VisualStyleMode Description.")]
+    public event EventHandler? VisualStylesModeChanged
+    {
+        add => Events.AddHandler(s_visualStylesModeChangedEvent, value);
+        remove => Events.RemoveHandler(s_visualStylesModeChangedEvent, value);
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -6177,8 +6315,9 @@ public unsafe partial class Control :
         // NOTE: this message may not have originally been sent to this HWND.
         if (!GetStyle(ControlStyles.UserPaint))
         {
-            PInvoke.SetTextColor(dc, (COLORREF)(uint)ColorTranslator.ToWin32(ForeColor));
-            PInvoke.SetBkColor(dc, (COLORREF)(uint)ColorTranslator.ToWin32(BackColor));
+            PInvoke.SetTextColor(dc, (COLORREF)(uint)ColorTranslator.ToWin32(AdaptForDarkMode(ForeColor)));
+            PInvoke.SetBkColor(dc, (COLORREF)(uint)ColorTranslator.ToWin32(AdaptForDarkMode(BackColor)));
+
             return BackColorBrush;
         }
 
@@ -7148,7 +7287,7 @@ public unsafe partial class Control :
             return;
         }
 
-        if (Events[s_dataContextEvent] is EventHandler eventHandler)
+        if (Events[s_dataContextChangedEvent] is EventHandler eventHandler)
         {
             eventHandler(this, e);
         }
@@ -7391,6 +7530,52 @@ public unsafe partial class Control :
 
         // In every other case we're going to raise the event.
         OnDataContextChanged(e);
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    [Experimental("WFO9001")]
+    protected virtual void OnParentDarkModeChanged(EventArgs e)
+    {
+        if (Properties.ContainsObject(s_darkModeProperty))
+        {
+            // If this DataContext was the same as the Parent's just became,
+            if (Equals(Properties.GetObject(s_darkModeProperty), Parent?.DarkMode))
+            {
+                // we need to make it ambient again by removing it.
+                Properties.RemoveObject(s_darkModeProperty);
+
+                // Even though internally we don't store it any longer, and the
+                // value we had stored therefore changed, technically the value
+                // remains the same, so we don't raise the DataContextChanged event.
+                return;
+            }
+        }
+
+        // In every other case we're going to raise the event.
+        OnDarkModeChanged(e);
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    [Experimental("WFO9000")]
+    protected virtual void OnParentVisualStylesModeChanged(EventArgs e)
+    {
+        if (Properties.ContainsObject(s_visualStylesModeProperty))
+        {
+            // If this DataContext was the same as the Parent's just became,
+            if (Equals(Properties.GetObject(s_visualStylesModeProperty), Parent?.VisualStylesMode))
+            {
+                // we need to make it ambient again by removing it.
+                Properties.RemoveObject(s_visualStylesModeProperty);
+
+                // Even though internally we don't store it any longer, and the
+                // value we had stored therefore changed, technically the value
+                // remains the same, so we don't raise the DataContextChanged event.
+                return;
+            }
+        }
+
+        // In every other case we're going to raise the event.
+        OnVisualStylesModeChanged(e);
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
@@ -7753,7 +7938,6 @@ public unsafe partial class Control :
                 PInvoke.SetWindowText(this, _text);
             }
 
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
             if (IsDarkModeEnabled)
             {
                 // These controls need to be individually themed.
@@ -7768,7 +7952,6 @@ public unsafe partial class Control :
                         pszSubIdList: null);
                 }
             }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
 
             if (this is not ScrollableControl
                 && !IsMirrored
@@ -8518,6 +8701,30 @@ public unsafe partial class Control :
         ((EventHandler?)Events[s_validatedEvent])?.Invoke(this, e);
     }
 
+    [Experimental("WFO9000")]
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    protected virtual void OnVisualStylesModeChanged(EventArgs e)
+    {
+        if (GetAnyDisposingInHierarchy())
+        {
+            return;
+        }
+
+        if (Events[s_visualStylesModeChangedEvent] is EventHandler eventHandler)
+        {
+            eventHandler(this, e);
+        }
+
+        ControlCollection? controlsCollection = (ControlCollection?)Properties.GetObject(s_controlsCollectionProperty);
+        if (controlsCollection is not null)
+        {
+            for (int i = 0; i < controlsCollection.Count; i++)
+            {
+                controlsCollection[i].OnParentVisualStylesModeChanged(e);
+            }
+        }
+    }
+
     /// <summary>
     ///  This is called in the <see cref="Control"/> constructor before calculating the initial <see cref="Size"/>.
     ///  This gives a chance to initialize fields that will be used in calls to sizing related virtuals such as
@@ -8559,7 +8766,7 @@ public unsafe partial class Control :
             PaintTransparentBackground(e, rectangle);
         }
 
-        // If the form or mdiclient is mirrored then we do not render the background image due to GDI+ issues.
+        // If the form or MDIClient is mirrored then we do not render the background image due to GDI+ issues.
         bool formRTL = ((this is Form || this is MdiClient) && IsMirrored);
 
         // The rest of this won't do much if BackColor is transparent and there is no BackgroundImage,
@@ -8581,7 +8788,7 @@ public unsafe partial class Control :
 
             if (imageIsTransparent)
             {
-                PaintBackColor(e, rectangle, backColor);
+                PaintBackColor(e, rectangle, AdaptForDarkMode(backColor));
             }
 
             ControlPaint.DrawBackgroundImage(
@@ -8596,7 +8803,7 @@ public unsafe partial class Control :
         }
         else
         {
-            PaintBackColor(e, rectangle, backColor);
+            PaintBackColor(e, rectangle, AdaptForDarkMode(backColor));
         }
     }
 
@@ -8668,7 +8875,7 @@ public unsafe partial class Control :
             // For whatever reason, our parent can't paint our background, but we need some kind of background
             // since we're transparent.
             using DeviceContextHdcScope hdcNoParent = new(e);
-            using CreateBrushScope hbrush = new(Application.ApplicationColors.Control);
+            using CreateBrushScope hbrush = new(SystemColors.Control);
             hdcNoParent.FillRectangle(rectangle, hbrush);
             return;
         }
@@ -8676,7 +8883,6 @@ public unsafe partial class Control :
         // We need to use theming painting for certain controls (like TabPage) when they parent other controls.
         // But we don't want to to this always as this causes serious performance (at Runtime and DesignTime)
         // so checking for RenderTransparencyWithVisualStyles which is TRUE for TabPage and false by default.
-#pragma warning disable WFO9000 // Type is for evaluation purposes only and is subject to change or removal in future updates.
         if (Application.DefaultVisualStylesMode != VisualStylesMode.Disabled
             && parent.RenderTransparencyWithVisualStyles)
         {
@@ -8699,7 +8905,6 @@ public unsafe partial class Control :
 
             return;
         }
-#pragma warning restore WFO9000 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Move the rendering area and setup it's size (we want to translate it to the parent's origin).
         Rectangle shift = new(-Left, -Top, parent.Width, parent.Height);
@@ -10844,9 +11049,7 @@ public unsafe partial class Control :
                 {
                     if (value)
                     {
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
                         PrepareDarkMode(HWND, IsDarkModeEnabled);
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
                     }
 
                     PInvoke.ShowWindow(HWND, value ? ShowParams : SHOW_WINDOW_CMD.SW_HIDE);

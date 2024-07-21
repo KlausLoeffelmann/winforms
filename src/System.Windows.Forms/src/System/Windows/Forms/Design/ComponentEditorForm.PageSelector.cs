@@ -27,7 +27,7 @@ public partial class ComponentEditorForm
         {
             HotTracking = true;
             HideSelection = false;
-            BackColor = Application.ApplicationColors.Control;
+            BackColor = SystemColors.Control;
             Indent = 0;
             LabelEdit = false;
             Scrollable = false;

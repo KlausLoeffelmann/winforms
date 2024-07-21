@@ -249,7 +249,6 @@ public partial class ComboBox : ListControl
         }
     }
 
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     /// <summary>
     ///  The background color of this control. This is an ambient property and
     ///  will always return a non-null value.
@@ -264,7 +263,7 @@ public partial class ComboBox : ListControl
             }
             else
             {
-                return Application.ApplicationColors.Window;
+                return Drawing.SystemColors.Window;
             }
         }
         set => base.BackColor = value;
@@ -586,7 +585,7 @@ public partial class ComboBox : ListControl
             }
             else
             {
-                return Application.ApplicationColors.WindowText;
+                return SystemColors.WindowText;
             }
         }
         set => base.ForeColor = value;
@@ -2461,6 +2460,7 @@ public partial class ComboBox : ListControl
 
             // Style the ComboBox drop-down (including its ScrollBar(s)):
             _ = PInvoke.GetComboBoxInfo(HWND, ref cInfo);
+
             PInvoke.SetWindowTheme(cInfo.hwndList, $"{DarkModeIdentifier}_{ExplorerThemeIdentifier}", null);
         }
 
@@ -3587,7 +3587,7 @@ public partial class ComboBox : ListControl
         {
             PInvokeCore.GetClientRect(this, out RECT rect);
             HDC hdc = (HDC)m.WParamInternal;
-            using var hbrush = new CreateBrushScope(ParentInternal?.BackColor ?? Application.ApplicationColors.Control);
+            using var hbrush = new CreateBrushScope(AdaptForDarkMode(ParentInternal?.BackColor ?? SystemColors.Control));
             hdc.FillRectangle(rect, hbrush);
             m.ResultInternal = (LRESULT)1;
             return;
@@ -3869,7 +3869,7 @@ public partial class ComboBox : ListControl
             case PInvoke.WM_PAINT:
                 if (!GetStyle(ControlStyles.UserPaint)
                     && (FlatStyle == FlatStyle.Flat || FlatStyle == FlatStyle.Popup)
-                    && !(SystemInformation.HighContrast && BackColor == Application.ApplicationColors.Window))
+                    && !(SystemInformation.HighContrast && BackColor == Drawing.SystemColors.Window))
                 {
                     using RegionScope dropDownRegion = new(FlatComboBoxAdapter._dropDownRect);
                     using RegionScope windowRegion = new(Bounds);
@@ -3971,7 +3971,6 @@ public partial class ComboBox : ListControl
                 break;
         }
     }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
     private FlatComboAdapter FlatComboBoxAdapter
     {

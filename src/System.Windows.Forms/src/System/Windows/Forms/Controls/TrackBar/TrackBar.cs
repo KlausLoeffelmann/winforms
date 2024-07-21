@@ -233,7 +233,7 @@ public partial class TrackBar : Control, ISupportInitialize
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override Color ForeColor
     {
-        get => Application.ApplicationColors.WindowText;
+        get => SystemColors.WindowText;
         set { }
     }
 

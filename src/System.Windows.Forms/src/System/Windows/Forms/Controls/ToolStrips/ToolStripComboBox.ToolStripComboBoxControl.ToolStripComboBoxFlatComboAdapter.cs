@@ -45,7 +45,7 @@ public partial class ToolStripComboBox
                     return base.GetOuterBorderColor(comboBox);
                 }
 
-                return (comboBox.Enabled) ? Application.ApplicationColors.Window : GetColorTable(comboBox as ToolStripComboBoxControl).ComboBoxBorder;
+                return (comboBox.Enabled) ? ControlSystemColors.Default.Window : GetColorTable(comboBox as ToolStripComboBoxControl).ComboBoxBorder;
             }
 
             protected override Color GetPopupOuterBorderColor(ComboBox comboBox, bool focused)
@@ -57,12 +57,12 @@ public partial class ToolStripComboBox
 
                 if (!comboBox.Enabled)
                 {
-                    return Application.ApplicationColors.ControlDark;
+                    return ControlSystemColors.Default.ControlDark;
                 }
 
                 return focused
                     ? GetColorTable(comboBox as ToolStripComboBoxControl).ComboBoxBorder
-                    : Application.ApplicationColors.Window;
+                    : ControlSystemColors.Default.Window;
             }
 
             protected override void DrawFlatComboDropDown(ComboBox comboBox, Graphics g, Rectangle dropDownRect)

@@ -135,7 +135,7 @@ internal sealed partial class SelectionUIService
             Rectangle inner = _innerRect;
             Rectangle outer = _outerRect;
             Region oldClip = graphics.Clip;
-            Color borderColor = SystemColors.Control;
+            Color borderColor = Drawing.SystemColors.Control;
             if (_control is not null && _control.Parent is not null)
             {
                 Control parent = _control.Parent;

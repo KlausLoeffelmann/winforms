@@ -32,7 +32,7 @@ public partial class PropertyGrid
         {
         }
 
-        public Color BorderColor { get; set; } = Application.ApplicationColors.ControlDark;
+        public Color BorderColor { get; set; } = ControlSystemColors.Default.ControlDark;
 
         protected override void OnPaint(PaintEventArgs e)
         {

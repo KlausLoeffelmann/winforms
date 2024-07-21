@@ -32,7 +32,7 @@ internal sealed partial class DesignerActionPanel
             _readOnlyTextBoxLabel = new EditorLabel
             {
                 BackColor = Color.Transparent,
-                ForeColor = SystemColors.WindowText,
+                ForeColor = Drawing.SystemColors.WindowText,
                 TabStop = true,
                 TextAlign = ContentAlignment.TopLeft,
                 UseMnemonic = false,
@@ -159,14 +159,14 @@ internal sealed partial class DesignerActionPanel
 
         private void OnReadOnlyTextBoxLabelEnter(object? sender, EventArgs e)
         {
-            _readOnlyTextBoxLabel.ForeColor = SystemColors.HighlightText;
-            _readOnlyTextBoxLabel.BackColor = SystemColors.Highlight;
+            _readOnlyTextBoxLabel.ForeColor = Drawing.SystemColors.HighlightText;
+            _readOnlyTextBoxLabel.BackColor = Drawing.SystemColors.Highlight;
         }
 
         private void OnReadOnlyTextBoxLabelLeave(object? sender, EventArgs e)
         {
-            _readOnlyTextBoxLabel.ForeColor = SystemColors.WindowText;
-            _readOnlyTextBoxLabel.BackColor = SystemColors.Window;
+            _readOnlyTextBoxLabel.ForeColor = Drawing.SystemColors.WindowText;
+            _readOnlyTextBoxLabel.BackColor = Drawing.SystemColors.Window;
         }
 
         protected TypeConverter.StandardValuesCollection? GetStandardValues()

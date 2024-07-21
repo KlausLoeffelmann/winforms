@@ -192,7 +192,7 @@ public partial class TreeView : Control
     /// </summary>
     public override Color BackColor
     {
-        get => ShouldSerializeBackColor() ? base.BackColor : Application.ApplicationColors.Window;
+        get => ShouldSerializeBackColor() ? base.BackColor : Drawing.SystemColors.Window;
         set
         {
             base.BackColor = value;
@@ -436,7 +436,7 @@ public partial class TreeView : Control
     /// </summary>
     public override Color ForeColor
     {
-        get => ShouldSerializeForeColor() ? base.ForeColor : Application.ApplicationColors.WindowText;
+        get => ShouldSerializeForeColor() ? base.ForeColor : Drawing.SystemColors.WindowText;
         set
         {
             base.ForeColor = value;
@@ -867,7 +867,7 @@ public partial class TreeView : Control
                 _lineColor = value;
                 if (IsHandleCreated)
                 {
-                    PInvoke.SendMessage(this, PInvoke.TVM_SETLINECOLOR, 0, _lineColor.ToWin32());
+                    PInvoke.SendMessage(this, PInvoke.TVM_SETLINECOLOR, 0, AdaptForDarkMode(_lineColor).ToWin32());
                 }
             }
         }
@@ -1878,24 +1878,22 @@ public partial class TreeView : Control
         }
 
         Color c = BackColor;
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        if (c != Application.ApplicationColors.Window || IsDarkModeEnabled)
+        if (c != Drawing.SystemColors.Window || IsDarkModeEnabled)
         {
-            PInvoke.SendMessage(this, PInvoke.TVM_SETBKCOLOR, 0, c.ToWin32());
+            PInvoke.SendMessage(this, PInvoke.TVM_SETBKCOLOR, 0, AdaptForDarkMode(c).ToWin32());
         }
 
         c = ForeColor;
 
-        if (c != Application.ApplicationColors.WindowText || IsDarkModeEnabled)
+        if (c != Drawing.SystemColors.WindowText || IsDarkModeEnabled)
         {
-            PInvoke.SendMessage(this, PInvoke.TVM_SETTEXTCOLOR, 0, c.ToWin32());
+            PInvoke.SendMessage(this, PInvoke.TVM_SETTEXTCOLOR, 0, AdaptForDarkMode(c).ToWin32());
         }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         // Put the LineColor into the native control only if set.
         if (_lineColor != Color.Empty)
         {
-            PInvoke.SendMessage(this, PInvoke.TVM_SETLINECOLOR, 0, _lineColor.ToWin32());
+            PInvoke.SendMessage(this, PInvoke.TVM_SETLINECOLOR, 0, AdaptForDarkMode(_lineColor).ToWin32());
         }
 
         if (_imageList is not null)
@@ -2835,13 +2833,18 @@ public partial class TreeView : Control
                             TreeNodeStates curState = e.State;
 
                             Font font = node.NodeFont ?? node.TreeView.Font;
-                            Color color = (((curState & TreeNodeStates.Selected) == TreeNodeStates.Selected) && node.TreeView.Focused) ? Application.ApplicationColors.HighlightText : (node.ForeColor != Color.Empty) ? node.ForeColor : node.TreeView.ForeColor;
+
+                            Color color = (((curState & TreeNodeStates.Selected) == TreeNodeStates.Selected) && node.TreeView.Focused)
+                                ? SystemColors.HighlightText
+                                : AdaptForDarkMode((node.ForeColor != Color.Empty)
+                                    ? node.ForeColor
+                                    : node.TreeView.ForeColor);
 
                             // Draw the actual node.
                             if ((curState & TreeNodeStates.Selected) == TreeNodeStates.Selected)
                             {
-                                g.FillRectangle(SystemBrushes.Highlight, bounds);
-                                ControlPaint.DrawFocusRectangle(g, bounds, color, Application.ApplicationColors.Highlight);
+                                g.FillRectangle(AdaptForDarkMode(SystemBrushes.Highlight), bounds);
+                                ControlPaint.DrawFocusRectangle(g, bounds, color, SystemColors.Highlight);
                                 TextRenderer.DrawText(g, node.Text, font, bounds, color, TextFormatFlags.Default);
                             }
                             else

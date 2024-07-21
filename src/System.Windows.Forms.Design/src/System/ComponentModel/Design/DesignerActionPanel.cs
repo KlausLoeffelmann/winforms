@@ -117,9 +117,9 @@ internal sealed partial class DesignerActionPanel : ContainerControl
         MinimumSize = new Size(150, 0);
     }
 
-    public Color ActiveLinkColor { get; } = SystemColors.HotTrack;
+    public Color ActiveLinkColor { get; } = Drawing.SystemColors.HotTrack;
 
-    public Color BorderColor { get; } = SystemColors.ActiveBorder;
+    public Color BorderColor { get; } = Drawing.SystemColors.ActiveBorder;
 
     /// <summary>
     ///  Returns the list of commands that should be filtered by the form that hosts this panel. This is done so that these specific commands will not get passed on to VS, and can instead be handled by the panel itself.
@@ -167,23 +167,23 @@ internal sealed partial class DesignerActionPanel : ContainerControl
     /// </summary>
     private Line? FocusedLine => ActiveControl?.Tag as Line;
 
-    public Color GradientDarkColor { get; } = SystemColors.Control;
+    public Color GradientDarkColor { get; } = Drawing.SystemColors.Control;
 
-    public Color GradientLightColor { get; } = SystemColors.Control;
+    public Color GradientLightColor { get; } = Drawing.SystemColors.Control;
 
     public bool InMethodInvoke { get; internal set; }
 
-    public Color LinkColor { get; } = SystemColors.HotTrack;
+    public Color LinkColor { get; } = Drawing.SystemColors.HotTrack;
 
-    public Color SeparatorColor { get; } = SystemColors.ControlDark;
+    public Color SeparatorColor { get; } = Drawing.SystemColors.ControlDark;
 
-    public Color TitleBarColor { get; } = SystemColors.ActiveCaption;
+    public Color TitleBarColor { get; } = Drawing.SystemColors.ActiveCaption;
 
-    public Color TitleBarTextColor { get; } = SystemColors.ActiveCaptionText;
+    public Color TitleBarTextColor { get; } = Drawing.SystemColors.ActiveCaptionText;
 
-    public Color TitleBarUnselectedColor { get; } = SystemColors.InactiveCaption;
+    public Color TitleBarUnselectedColor { get; } = Drawing.SystemColors.InactiveCaption;
 
-    public Color LabelForeColor { get; } = SystemColors.ControlText;
+    public Color LabelForeColor { get; } = Drawing.SystemColors.ControlText;
 
     /// <summary>
     ///  Helper event so that Lines can be notified of this event.

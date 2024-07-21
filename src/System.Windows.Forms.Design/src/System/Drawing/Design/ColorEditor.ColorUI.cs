@@ -70,7 +70,7 @@ public partial class ColorEditor
         /// <summary>
         ///  Array of system colors.
         /// </summary>
-        private Color[] SystemColorValues => _systemColorConstants ??= GetConstants(typeof(SystemColors));
+        private Color[] SystemColorValues => _systemColorConstants ??= GetConstants(typeof(ControlSystemColors));
 
         public object? Value => _value;
 
