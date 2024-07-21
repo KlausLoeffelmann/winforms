@@ -72,14 +72,14 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     private int _paintFrozen;
 
     private Color _lineColor = SystemInformation.HighContrast
-        ? Application.ApplicationColors.ControlDarkDark
-        : Application.ApplicationColors.InactiveBorder;
+        ? ControlSystemColors.Default.ControlDarkDark
+        : ControlSystemColors.Default.InactiveBorder;
 
-    private Color _categoryForegroundColor = Application.ApplicationColors.ControlText;
-    private Color _categorySplitterColor = Application.ApplicationColors.Control;
-    private Color _viewBorderColor = Application.ApplicationColors.ControlDark;
-    private Color _selectedItemWithFocusForeColor = Application.ApplicationColors.HighlightText;
-    private Color _selectedItemWithFocusBackColor = Application.ApplicationColors.Highlight;
+    private Color _categoryForegroundColor = ControlSystemColors.Default.ControlText;
+    private Color _categorySplitterColor = ControlSystemColors.Default.Control;
+    private Color _viewBorderColor = ControlSystemColors.Default.ControlDark;
+    private Color _selectedItemWithFocusForeColor = ControlSystemColors.Default.HighlightText;
+    private Color _selectedItemWithFocusBackColor = ControlSystemColors.Default.Highlight;
     private bool _canShowVisualStyleGlyphs = true;
 
     private AttributeCollection? _browsableAttributes;
@@ -215,8 +215,8 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
 
                 _helpPane.TabStop = false;
                 _helpPane.Dock = DockStyle.None;
-                _helpPane.BackColor = Application.ApplicationColors.Control;
-                _helpPane.ForeColor = Application.ApplicationColors.ControlText;
+                _helpPane.BackColor = Drawing.SystemColors.Control;
+                _helpPane.ForeColor = Drawing.SystemColors.ControlText;
                 _helpPane.MouseMove += OnChildMouseMove;
                 _helpPane.MouseDown += OnChildMouseDown;
 
@@ -1621,9 +1621,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     }
 
     [Conditional("DEBUG")]
-#pragma warning disable CA1822 // Mark members as static
     internal void CheckInCreate()
-#pragma warning restore CA1822 // Mark members as static
     {
 #if DEBUG
         if (_inGridViewCreate)
@@ -3705,7 +3703,7 @@ public partial class PropertyGrid : ContainerControl, IComPropertyBrowser, IProp
     }
 
     private void SetHotCommandColors()
-        => _commandsPane.SetColors(SystemColors.Control, Application.ApplicationColors.ControlText, Color.Empty, Color.Empty, Color.Empty, Color.Empty);
+        => _commandsPane.SetColors(SystemColors.Control, SystemColors.ControlText, Color.Empty, Color.Empty, Color.Empty, Color.Empty);
 
     internal void SetStatusBox(string? title, string? description) => _helpPane.SetDescription(title, description);
 

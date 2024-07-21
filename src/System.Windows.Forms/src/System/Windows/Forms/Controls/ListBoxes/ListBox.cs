@@ -156,7 +156,7 @@ public partial class ListBox : ListControl
             }
             else
             {
-                return Application.ApplicationColors.Window;
+                return Drawing.SystemColors.Window;
             }
         }
         set => base.BackColor = value;
@@ -449,7 +449,7 @@ public partial class ListBox : ListControl
             }
             else
             {
-                return Application.ApplicationColors.WindowText;
+                return Drawing.SystemColors.WindowText;
             }
         }
         set => base.ForeColor = value;

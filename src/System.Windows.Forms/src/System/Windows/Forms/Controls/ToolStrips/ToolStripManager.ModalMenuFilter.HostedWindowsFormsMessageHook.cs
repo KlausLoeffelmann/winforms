@@ -25,14 +25,13 @@ public static partial class ToolStripManager
 #if DEBUG
             private readonly string _callingStack;
 
-#pragma warning disable CA1821 // Remove empty Finalizers
+            [SuppressMessage("Performance", "CA1821:Remove empty Finalizers", Justification = "<Pending>")]
             ~HostedWindowsFormsMessageHook()
             {
                 Debug.Assert(
                     _messageHookHandle == IntPtr.Zero,
                     $"Finalizing an active mouse hook. This will crash the process. Calling stack: {_callingStack}");
             }
-#pragma warning restore CA1821
 #endif
 
             public bool HookMessages

@@ -40,9 +40,7 @@ public sealed partial class Application
     private static readonly Lock s_internalSyncObject = new();
     private static bool s_useWaitCursor;
 
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     private static DarkMode? s_darkMode;
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
     private const string DarkModeKeyPath = "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
     private const string DarkModeKey = "AppsUseLightTheme";
@@ -408,33 +406,6 @@ public sealed partial class Application
                 _ => false
             }
         };
-
-    /// <summary>
-    ///  Gets the application colors.
-    /// </summary>
-    /// <remarks>
-    ///  <list type="bullet">
-    ///   <item>
-    ///    <description>
-    ///     In light mode or high contrast settings, the colors are equal to the <see cref="SystemColors"/>.
-    ///    </description>
-    ///   </item>
-    ///   <item>
-    ///    <description>
-    ///     In dark mode, the colors are derived from a custom set of colors defined by WinForms,
-    ///     which resemble a compromise between Visual Studio Dark Scheme, Windows 11 Dark Scheme, and accessibility requirements.
-    ///    </description>
-    ///    </item>
-    ///  </list>
-    ///  <para>
-    ///   The color scheme is read-only and cannot be changed.
-    ///  </para>
-    /// </remarks>
-    [Experimental("WFO9002")]
-    public static ApplicationColors ApplicationColors
-        => IsDarkModeEnabled
-            ? DarkThemedApplicationColors.DefaultInstance
-            : LightThemedApplicationColors.DefaultInstance;
 
     /// <summary>
     ///  Gets the path for the executable file that started the application.

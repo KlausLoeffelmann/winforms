@@ -84,7 +84,7 @@ internal sealed partial class DropDownButton : Button
             Rectangle dropDownButtonRect = new(0, 0, Width, Height);
             if (state == ComboBoxState.Normal)
             {
-                pevent.Graphics.FillRectangle(SystemBrushes.Window, dropDownButtonRect);
+                pevent.Graphics.FillRectangle(AdaptForDarkMode(SystemBrushes.Window), dropDownButtonRect);
             }
 
             using (DeviceContextHdcScope hdc = new(pevent))

@@ -424,10 +424,9 @@ public partial class GroupBox : Control
             // We only pass in the text color if it is explicitly set, else we let the renderer use the color
             // specified by the theme. This is a temporary workaround till we find a good solution for the
             // "default theme color" issue.
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             if (ShouldSerializeForeColor() || IsDarkModeEnabled || !Enabled)
             {
-                Color textColor = Enabled ? ForeColor : TextRenderer.DisabledTextColor(BackColor);
+                Color textColor = AdaptForDarkMode(Enabled ? ForeColor : TextRenderer.DisabledTextColor(BackColor));
 
                 GroupBoxRenderer.DrawGroupBox(
                     e,
@@ -448,7 +447,6 @@ public partial class GroupBox : Control
                     textFlags,
                     gbState);
             }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         }
 
         base.OnPaint(e); // raise paint event
@@ -544,7 +542,7 @@ public partial class GroupBox : Control
 
         if (SystemInformation.HighContrast)
         {
-            Color boxColor = Enabled ? ForeColor : Application.ApplicationColors.GrayText;
+            Color boxColor = Enabled ? ForeColor : SystemColors.GrayText;
 
             ReadOnlySpan<int> lines =
             [

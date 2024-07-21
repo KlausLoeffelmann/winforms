@@ -4179,12 +4179,10 @@ public partial class Form : ContainerControl
         // Finally fire the new OnShown(unless the form has already been closed).
         if (IsHandleCreated)
         {
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
             if (IsDarkModeEnabled)
             {
-                PInvoke.SetWindowTheme(HWND, "DarkMode_Explorer", null);
+                PInvoke.SetWindowTheme(HWND, $"{DarkModeIdentifier}_{ExplorerThemeIdentifier}", null);
             }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
             BeginInvoke(new MethodInvoker(CallShownEvent));
         }
@@ -4329,7 +4327,7 @@ public partial class Form : ContainerControl
 
         if (IsMdiContainer)
         {
-            e.GraphicsInternal.FillRectangle(SystemBrushes.AppWorkspace, ClientRectangle);
+            e.GraphicsInternal.FillRectangle(AdaptForDarkMode(SystemBrushes.AppWorkspace), ClientRectangle);
         }
     }
 

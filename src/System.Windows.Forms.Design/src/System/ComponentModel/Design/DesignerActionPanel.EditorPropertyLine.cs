@@ -108,7 +108,7 @@ internal sealed partial class DesignerActionPanel
 
                 try
                 {
-                    ShowDropDown(listBox, SystemColors.ControlDark);
+                    ShowDropDown(listBox, Drawing.SystemColors.ControlDark);
                 }
                 finally
                 {

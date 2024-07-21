@@ -500,8 +500,11 @@ dotnet_diagnostic.CA2016.severity = warning
 # CA2020: Prevent behavioral change caused by built-in operators of IntPtr/UIntPtr 
 dotnet_diagnostic.CA2020.severity = warning
 
-# WFO9002:
-dotnet_diagnostic.WFO9002.severity = silent
+# WFO9000:
+dotnet_diagnostic.WFO9000.severity = silent
+
+# WFO9001:
+dotnet_diagnostic.WFO9001.severity = silent
 
 # .NET diagnostic
 dotnet_diagnostic.RS0041.severity = none

@@ -245,14 +245,14 @@ public partial class ToolStripTextBox
 
             if (!Enabled)
             {
-                outerBorderColor = Application.ApplicationColors.ControlDark;
-                innerBorderColor = Application.ApplicationColors.Control;
+                outerBorderColor = SystemColors.ControlDark;
+                innerBorderColor = SystemColors.Control;
             }
 
             using Graphics g = hdc.CreateGraphics();
             Rectangle clientRect = AbsoluteClientRectangle;
 
-            // Could have set up a clip and fill-rectangled, thought this would be faster.
+            // Could have set up a clip and rectangle-filled, thought this would be faster.
             using var brush = innerBorderColor.GetCachedSolidBrushScope();
             g.FillRectangle(brush, 0, 0, Width, clientRect.Top);                                // top border
             g.FillRectangle(brush, 0, 0, clientRect.Left, Height);                              // left border

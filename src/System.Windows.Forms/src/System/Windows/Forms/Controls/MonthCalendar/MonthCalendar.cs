@@ -59,9 +59,9 @@ namespace System.Windows.Forms;
 [SRDescription(nameof(SR.DescriptionMonthCalendar))]
 public partial class MonthCalendar : Control
 {
-    private static readonly Color s_defaultTitleBackColor = Application.ApplicationColors.ActiveCaption;
-    private static readonly Color s_defaultTitleForeColor = Application.ApplicationColors.ActiveCaptionText;
-    private static readonly Color s_trailingForeColor = Application.ApplicationColors.GrayText;
+    private static readonly Color s_defaultTitleBackColor = ControlSystemColors.Default.ActiveCaption;
+    private static readonly Color s_defaultTitleForeColor = ControlSystemColors.Default.ActiveCaptionText;
+    private static readonly Color s_trailingForeColor = ControlSystemColors.Default.GrayText;
     private const int MonthsInYear = 12;
 
     /// <summary>
@@ -193,14 +193,12 @@ public partial class MonthCalendar : Control
     {
         get
         {
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            if (ShouldSerializeBackColor() || IsDarkModeEnabled)
+            if (ShouldSerializeBackColor())
             {
                 return base.BackColor;
             }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-            return Application.ApplicationColors.Window;
+            return SystemColors.Window;
         }
         set => base.BackColor = value;
     }
@@ -409,14 +407,12 @@ public partial class MonthCalendar : Control
     {
         get
         {
-#pragma warning disable WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            if (ShouldSerializeForeColor() || IsDarkModeEnabled)
+            if (ShouldSerializeForeColor())
             {
                 return base.ForeColor;
             }
-#pragma warning restore WFO9001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-            return Application.ApplicationColors.WindowText;
+            return SystemColors.WindowText;
         }
         set => base.ForeColor = value;
     }

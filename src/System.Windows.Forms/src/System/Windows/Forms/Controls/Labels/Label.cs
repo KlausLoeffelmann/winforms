@@ -1000,7 +1000,7 @@ public partial class Label : Control, IAutomationLiveRegion
 
         if (!Enabled)
         {
-            ControlPaint.DrawImageDisabled(g, image, loc.X, loc.Y, BackColor);
+            ControlPaint.DrawImageDisabled(g, image, loc.X, loc.Y, AdaptForDarkMode(BackColor));
         }
         else
         {
@@ -1015,7 +1015,7 @@ public partial class Label : Control, IAutomationLiveRegion
         // COMPAT: Everett added random numbers to the height of the label
         if (UseCompatibleTextRendering)
         {
-            // Always return the Fontheight + some buffer else the Text gets clipped for Autosize = true..
+            // Always return the FontHeight + some buffer else the Text gets clipped for Autosize = true..
             if (BorderStyle != BorderStyle.None)
             {
                 bordersAndPadding.Height += 6; // taken from Everett.PreferredHeight
@@ -1273,7 +1273,7 @@ public partial class Label : Control, IAutomationLiveRegion
         Color color;
         using (DeviceContextHdcScope hdc = new(e))
         {
-            color = hdc.FindNearestColor(Enabled ? ForeColor : DisabledColor);
+            color = hdc.FindNearestColor(Enabled ? AdaptForDarkMode(ForeColor) : DisabledColor);
         }
 
         // Do actual drawing
@@ -1312,8 +1312,8 @@ public partial class Label : Control, IAutomationLiveRegion
             }
             else
             {
-                // Theme specs -- if the backcolor is darker than Control, we use
-                // ControlPaint.Dark(backcolor).  Otherwise we use ControlDark.
+                // Theme specs -- if the BackColor is darker than Control, we use
+                // ControlPaint.Dark(BackColor).  Otherwise we use ControlDark.
 
                 Color disabledTextForeColor = TextRenderer.DisabledTextColor(BackColor);
                 TextRenderer.DrawTextInternal(e, Text, Font, face, disabledTextForeColor, flags: flags);
@@ -1324,7 +1324,7 @@ public partial class Label : Control, IAutomationLiveRegion
     }
 
     /// <summary>
-    ///  Overriden by LinkLabel.
+    ///  Overridden by LinkLabel.
     /// </summary>
     internal virtual void OnAutoEllipsisChanged()
     {

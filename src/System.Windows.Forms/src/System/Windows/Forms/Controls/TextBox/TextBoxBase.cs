@@ -289,11 +289,11 @@ public abstract partial class TextBoxBase : Control
             }
             else if (ReadOnly)
             {
-                return Application.ApplicationColors.Control;
+                return Drawing.SystemColors.Control;
             }
             else
             {
-                return Application.ApplicationColors.Window;
+                return Drawing.SystemColors.Window;
             }
         }
         set => base.BackColor = value;
@@ -521,7 +521,7 @@ public abstract partial class TextBoxBase : Control
             }
             else
             {
-                return Application.ApplicationColors.WindowText;
+                return SystemColors.WindowText;
             }
         }
         set => base.ForeColor = value;
@@ -2191,15 +2191,15 @@ public abstract partial class TextBoxBase : Control
         Padding systemPadding = GetVisualStylesSystemPadding();
         int borderThickness = GetBorderThicknessDpiFactor();
 
-        Color adornerColor = ForeColor;
-        Color parentBackColor = Parent?.BackColor ?? BackColor;
-        Color clientBackColor = BackColor;
+        Color adornerColor = AdaptForDarkMode(ForeColor);
+        Color parentBackColor = AdaptForDarkMode(Parent?.BackColor ?? BackColor);
+        Color clientBackColor = AdaptForDarkMode(BackColor);
 
         using Brush parentBackgroundBrush = new SolidBrush(parentBackColor);
         using Brush clientBackgroundBrush = new SolidBrush(clientBackColor);
         using Brush adornerBrush = new SolidBrush(adornerColor);
         using Pen adornerPen = new(adornerColor, borderThickness);
-        using Pen focusPen = new(Application.ApplicationColors.Highlight, borderThickness);
+        using Pen focusPen = new(SystemColors.Highlight, borderThickness);
 
         Rectangle bounds = new Rectangle(
             x: 0,
