@@ -725,7 +725,7 @@ public partial class ToolStripMenuItem : ToolStripDropDownItem
             g.DrawRectangle(SystemPens.Control, 0, 0, image.Width - 1, image.Height - 1);
         }
 
-        image.MakeTransparent(Application.ApplicationColors.Control);
+        image.MakeTransparent(SystemColors.Control);
         return image;
     }
 
@@ -965,7 +965,7 @@ public partial class ToolStripMenuItem : ToolStripDropDownItem
         Graphics g = e.Graphics;
         renderer.DrawMenuItemBackground(new ToolStripItemRenderEventArgs(g, this));
 
-        Color textColor = Application.ApplicationColors.MenuText;
+        Color textColor = SystemColors.MenuText;
         if (IsForeColorSet)
         {
             textColor = ForeColor;
@@ -974,11 +974,11 @@ public partial class ToolStripMenuItem : ToolStripDropDownItem
         {
             if (Selected || Pressed)
             {
-                textColor = Application.ApplicationColors.HighlightText;
+                textColor = SystemColors.HighlightText;
             }
             else
             {
-                textColor = Application.ApplicationColors.MenuText;
+                textColor = SystemColors.MenuText;
             }
         }
 
@@ -1020,8 +1020,8 @@ public partial class ToolStripMenuItem : ToolStripDropDownItem
             if (HasDropDownItems)
             {
                 ArrowDirection arrowDir = (rightToLeft) ? ArrowDirection.Left : ArrowDirection.Right;
-                Color arrowColor = (Selected || Pressed) ? Application.ApplicationColors.HighlightText : Application.ApplicationColors.MenuText;
-                arrowColor = (Enabled) ? arrowColor : Application.ApplicationColors.ControlDark;
+                Color arrowColor = (Selected || Pressed) ? SystemColors.HighlightText : SystemColors.MenuText;
+                arrowColor = (Enabled) ? arrowColor : SystemColors.ControlDark;
                 renderer.DrawArrow(new ToolStripArrowRenderEventArgs(g, this, menuItemInternalLayout.ArrowRectangle, arrowColor, arrowDir));
             }
 
