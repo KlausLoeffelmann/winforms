@@ -17,4 +17,16 @@ public enum Appearance
     ///  The appearance of a Windows button.
     /// </summary>
     Button = 1,
+
+    /// <summary>
+    ///  The appearance of a Modern UI toggle switch, which can be applied
+    ///  to a <see cref="CheckBox"/> or a <see cref="RadioButton"/> control.
+    /// </summary>
+    /// <remarks>
+    ///  <para>
+    ///   <b>Note:</b> This setting is not taken into account, when <see cref="VisualStylesMode"/> is set
+    ///   to <see cref="VisualStylesMode.Disabled"/> or <see cref="VisualStylesMode.Classic"/>.
+    ///  </para>
+    /// </remarks>
+    ToggleSwitch = 2
 }

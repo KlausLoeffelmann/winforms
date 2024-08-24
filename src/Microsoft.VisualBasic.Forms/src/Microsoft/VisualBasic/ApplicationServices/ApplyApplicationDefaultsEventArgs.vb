@@ -21,25 +21,28 @@ Namespace Microsoft.VisualBasic.ApplicationServices
 
         Friend Sub New(minimumSplashScreenDisplayTime As Integer,
                 highDpiMode As HighDpiMode,
-                colorMode As SystemColorMode)
+                colorMode As SystemColorMode,
+                visualStylesMode As VisualStylesMode)
 
             Me.MinimumSplashScreenDisplayTime = minimumSplashScreenDisplayTime
             Me.HighDpiMode = highDpiMode
             Me.ColorMode = colorMode
         End Sub
 
-#Enable Warning WFO5001
-
         ''' <summary>
         '''  Setting this property inside the event handler determines the
         '''  <see cref="Application.ColorMode"/> for the application.
         ''' </summary>
-        <Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat:=WindowsFormsApplicationBase.WinFormsExperimentalUrl)>
         Public Property ColorMode As SystemColorMode
 
         ''' <summary>
-        '''  Setting this property inside the event handler causes a
-        '''  new default <see cref="Font"/> for Forms and UserControls to be set.
+        '''  Setting this property inside the event handler determines the <see cref="VisualStylesMode"/> for the application.
+        ''' </summary>
+        ''' <returns>The currently set <see cref="VisualStylesMode"/> for the application.</returns>
+        Public Property VisualStylesMode As VisualStylesMode
+
+        ''' <summary>
+        '''  Setting this property inside the event handler causes a new default Font for Forms and UserControls to be set.
         ''' </summary>
         ''' <remarks>
         '''  When the <see cref="WindowsFormsApplicationBase.ApplyApplicationDefaults"/> event is raised,

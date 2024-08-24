@@ -80,9 +80,15 @@ public partial class CheckBox : ButtonBase
                 else
                 {
                     UpdateStyles();
-                }
 
-                OnAppearanceChanged(EventArgs.Empty);
+                    if (value == Appearance.ToggleSwitch
+                        && VisualStylesMode >= VisualStylesMode.Net10)
+                    {
+                        Refresh();
+                    }
+
+                    OnAppearanceChanged(EventArgs.Empty);
+                }
             }
         }
     }

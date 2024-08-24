@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using System.Windows.Forms.Analyzers.Diagnostics;
 using System.Windows.Forms.VisualStyles;
 using Microsoft.Office;
 using Microsoft.Win32;
@@ -44,9 +43,7 @@ public sealed partial class Application
     private static readonly Lock s_internalSyncObject = new();
     private static bool s_useWaitCursor;
 
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     private static SystemColorMode? s_colorMode;
-#pragma warning restore WFO5001
 
     private const string DarkModeKeyPath = "HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
     private const string DarkModeKey = "AppsUseLightTheme";
@@ -66,6 +63,8 @@ public sealed partial class Application
     private static bool s_exiting;
 
     private static bool s_parkingWindowCreated;
+
+    private static VisualStylesMode? s_defaultVisualStylesMode;
 
     /// <summary>
     ///  This class is static, there is no need to ever create it.
@@ -257,8 +256,8 @@ public sealed partial class Application
     ///   static (shared in VB) <see cref="Application.SystemColorMode"/> property.
     ///  </para>
     /// </remarks>
-    [Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat = DiagnosticIDs.UrlFormat)]
-    public static SystemColorMode ColorMode => s_colorMode ?? SystemColorMode.Classic;
+    public static SystemColorMode ColorMode =>
+        s_colorMode ?? SystemColorMode.Classic;
 
     /// <summary>
     ///  True if the <see cref="ColorMode"/> has been set at least once.
@@ -290,7 +289,6 @@ public sealed partial class Application
     ///   color mode by handling the Application Events (see "WindowsFormsApplicationBase.ApplyApplicationDefaults").
     ///  </para>
     /// </remarks>
-    [Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat = DiagnosticIDs.UrlFormat)]
     public static void SetColorMode(SystemColorMode systemColorMode)
     {
         try
@@ -311,6 +309,7 @@ public sealed partial class Application
 
             s_colorMode = systemColorMode;
         }
+#pragma warning disable SYSLIB5002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
         finally
         {
             bool useAlternateColorSet = SystemColors.UseAlternativeColorSet;
@@ -322,6 +321,7 @@ public sealed partial class Application
                 NotifySystemEventsOfColorChange();
             }
         }
+#pragma warning restore SYSLIB5002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         static void NotifySystemEventsOfColorChange()
         {
@@ -351,6 +351,88 @@ public sealed partial class Application
         }
     }
 
+    /// <summary>
+    ///  Gets the default <see cref="DefaultVisualStylesMode"/> used as the rendering style guideline for the
+    ///  application's controls. The default setting is <see cref="VisualStylesMode.Classic"/>.
+    /// </summary>
+    /// <returns>
+    ///  The <see cref="VisualStylesMode"/> used as the rendering style guideline for the application's controls.
+    /// </returns>
+    /// <remarks>
+    ///  <para>
+    ///   Starting from .NET 9, controls must adapt to new requirements in certain situations, such as dark mode and
+    ///   enhanced accessibility (A11Y) features. These changes can potentially alter the layout and appearance of forms.
+    ///  </para>
+    ///  <para>
+    ///   Therefore, it is necessary to provide mechanisms to finely control backward compatibility for
+    ///   existing and upcoming versions. This includes adjusting control rendering, requesting different
+    ///   sizes for new minimum space requirements, and handling adornments or margins/paddings. This property
+    ///   allows developers to ensure that their applications maintain a consistent appearance and behavior
+    ///   across different .NET versions, particularly when backward compatibility to "XP-based VisualStyles"
+    ///   is essential.
+    ///  </para>
+    /// </remarks>
+    public static VisualStylesMode DefaultVisualStylesMode
+    {
+        get => s_defaultVisualStylesMode
+            ??= RenderWithVisualStyles
+                ? VisualStylesMode.Classic
+                : VisualStylesMode.Disabled;
+
+        private set { }
+    }
+
+    /// <summary>
+    ///  Sets the default <see cref="DefaultVisualStylesMode"/> as the rendering style guideline for the Application's controls to use.
+    ///  Default is <see cref="VisualStylesMode.Net10"/> when visual style rendering is enabled,
+    ///  otherwise <see cref="VisualStylesMode.Disabled"/>. Setting to <see cref="VisualStylesMode.Disabled"/> has the same effect
+    ///  as not setting using <see cref="EnableVisualStyles"/>.
+    /// </summary>
+    /// <param name="styleSetting">The version of visual styles to set.</param>
+    public static void SetDefaultVisualStylesMode(VisualStylesMode styleSetting)
+    {
+        if (s_defaultVisualStylesMode.HasValue
+            && s_defaultVisualStylesMode.Value != styleSetting)
+        {
+            throw new InvalidOperationException(SR.Application_VisualStylesModeCanOnlyBeSetOnce);
+        }
+
+        // Can't use the Generator here, since it cannot deal with [Experimental].
+        _ = styleSetting switch
+        {
+            VisualStylesMode.Classic => styleSetting,
+            VisualStylesMode.Disabled => styleSetting,
+            VisualStylesMode.Net10 => styleSetting,
+            VisualStylesMode.Latest => styleSetting,
+            _ => throw new ArgumentOutOfRangeException(nameof(styleSetting))
+        };
+
+        if (!s_defaultVisualStylesMode.HasValue)
+        {
+            if (UseVisualStyles)
+            {
+                if (styleSetting == VisualStylesMode.Disabled)
+                {
+                    throw new InvalidOperationException(SR.Application_ClassicVisualStyleHadAlreadyBeenSet);
+                }
+
+                s_defaultVisualStylesMode = styleSetting;
+                return;
+            }
+
+            EnableVisualStyles();
+
+            // Check, if we were able to activate.
+            if (UseVisualStyles)
+            {
+                s_defaultVisualStylesMode = styleSetting;
+                return;
+            }
+
+            s_defaultVisualStylesMode = VisualStylesMode.Disabled;
+        }
+    }
+
     internal static Font DefaultFont => s_defaultFontScaled ?? s_defaultFont!;
 
     /// <summary>
@@ -369,7 +451,6 @@ public sealed partial class Application
     ///   SystemColorModes is not supported, if the Windows OS <c>High Contrast Mode</c> has been enabled in the system settings.
     ///  </para>
     /// </remarks>
-    [Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat = DiagnosticIDs.UrlFormat)]
     public static SystemColorMode SystemColorMode =>
         GetSystemColorModeInternal() == 0
             ? SystemColorMode.Dark
@@ -407,7 +488,6 @@ public sealed partial class Application
     ///  Gets a value indicating whether the application is running in a dark system color context.
     ///  Note: In a high contrast mode, this will always return <see langword="false"/>.
     /// </summary>
-    [Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat = DiagnosticIDs.UrlFormat)]
     public static bool IsDarkModeEnabled =>
         !SystemInformation.HighContrast
         && (ColorMode == SystemColorMode.Dark
@@ -569,8 +649,10 @@ public sealed partial class Application
     ///  visual styles? If you are doing visual styles rendering, use this to be consistent with the rest
     ///  of the controls in your app.
     /// </summary>
-    public static bool RenderWithVisualStyles
-        => ComCtlSupportsVisualStyles && VisualStyleRenderer.IsSupported;
+    public static bool RenderWithVisualStyles =>
+        ComCtlSupportsVisualStyles
+            && VisualStyleRenderer.IsSupported
+            && s_defaultVisualStylesMode != VisualStylesMode.Disabled;
 
     /// <summary>
     ///  Gets or sets the format string to apply to top level window captions

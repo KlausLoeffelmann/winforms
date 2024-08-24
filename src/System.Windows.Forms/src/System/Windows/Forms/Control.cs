@@ -143,10 +143,13 @@ public unsafe partial class Control :
     private static readonly object s_causesValidationEvent = new();
     private static readonly object s_regionChangedEvent = new();
     private static readonly object s_marginChangedEvent = new();
+
     // This needs to be internal for derived controls to access it.
     private protected static readonly object s_paddingChangedEvent = new();
+
     private static readonly object s_previewKeyDownEvent = new();
-    private static readonly object s_dataContextEvent = new();
+    private static readonly object s_dataContextChangedEvent = new();
+    private static readonly object s_visualStylesModeChangedEvent = new();
 
     private static MessageId s_threadCallbackMessage;
     private static ContextCallback? s_invokeMarshaledCallbackHelperDelegate;
@@ -224,6 +227,7 @@ public unsafe partial class Control :
     private static readonly int s_ambientPropertiesServiceProperty = PropertyStore.CreateKey();
 
     private static readonly int s_dataContextProperty = PropertyStore.CreateKey();
+    private static readonly int s_visualStylesModeProperty = PropertyStore.CreateKey();
 
     private static bool s_needToLoadComCtl = true;
 
@@ -3551,6 +3555,125 @@ public unsafe partial class Control :
     }
 
     /// <summary>
+    ///  Occurs when the value of the <see cref="VisualStylesMode"/> property changes.
+    /// </summary>
+    [SRCategory(nameof(SR.CatAppearance))]
+    [Browsable(true)]
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    [SRDescription(nameof(SR.ControlVisualStylesModeChangedDescr))]
+    public event EventHandler? VisualStylesModeChanged
+    {
+        add => Events.AddHandler(s_visualStylesModeChangedEvent, value);
+        remove => Events.RemoveHandler(s_visualStylesModeChangedEvent, value);
+    }
+
+    /// <summary>
+    ///  Gets or sets how the control renders itself with visual styles. This ambient property can inherit its value
+    ///  from its parent control or, if it is a top-level control, from the application's default setting.
+    /// </summary>
+    /// <value>
+    ///  The <see cref="VisualStylesMode"/> for the control. A control's VisualStylesMode default value always derives
+    ///  from its parent control, or if there is no parent, from the Application. The Application's
+    ///  <see cref="DefaultVisualStylesMode"/> is <see cref="VisualStylesMode.Classic"/>.
+    /// </value>
+    /// <remarks>
+    ///  <para>
+    ///   Starting from .NET 9, controls are required to adapt to new requirements such as dark mode and enhanced
+    ///   accessibility (A11Y) features. These changes can potentially alter the layout and appearance of forms.
+    ///   Therefore, it is necessary to provide mechanisms to finely control backwards compatibility for existing
+    ///   and upcoming versions. This includes adjusting control rendering, requesting different sizes for new
+    ///   minimum space requirements, and handling adornments or margins/paddings. This property allows developers
+    ///   to ensure that their applications maintain a consistent appearance and behavior across different .NET versions,
+    ///   particularly when backwards compatibility is essential.
+    ///  </para>
+    ///  <para>
+    ///   As an ambient property, if the control is a top-level control and its VisualStylesMode is not explicitly set,
+    ///   it will inherit the setting from <see cref="Application.DefaultVisualStylesMode"/>. Inherited controls can
+    ///   overwrite <see cref="DefaultVisualStylesMode"/> to ensure backwards compatibility for controls, which
+    ///   rely on a specific version of the visual styles of a base control (see <see cref="TextBoxBase"/> as an example).
+    ///  </para>
+    /// </remarks>
+    [SRCategory(nameof(SR.CatAppearance))]
+    [EditorBrowsable(EditorBrowsableState.Always)]
+    [SRDescription(nameof(SR.ControlVisualStylesModeDescr))]
+    public VisualStylesMode VisualStylesMode
+    {
+        get => Properties.TryGetObject(s_visualStylesModeProperty, out VisualStylesMode value)
+            ? value
+            : ParentInternal?.VisualStylesMode ?? DefaultVisualStylesMode;
+
+        set
+        {
+            if (ParentInternal is not null
+                && value == VisualStylesMode)
+            {
+                return;
+            }
+
+            _ = value switch
+            {
+                VisualStylesMode.Classic => value,
+                VisualStylesMode.Disabled => value,
+                VisualStylesMode.Net10 => value,
+                VisualStylesMode.Latest => value,
+                _ => throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(VisualStylesMode))
+            };
+
+            // When VisualStyleMode was different than its parent before, but now it is about to become the same,
+            // we're removing it altogether, so it can again inherit the value from its parent.
+            if (Properties.ContainsKey(s_visualStylesModeProperty)
+                && Equals(ParentInternal?.VisualStylesMode, value))
+            {
+                Properties.RemoveValue(s_visualStylesModeProperty);
+            }
+            else
+            {
+                Properties.AddValue(s_visualStylesModeProperty, value);
+            }
+
+            // We need to re-layout, because changing the VisualStylesMode in many cases
+            // affects the layout of the control.
+            using (LayoutTransaction.CreateTransactionIf(
+                condition: AutoSize,
+                controlToLayout: ParentInternal,
+                elementCausingLayout: this,
+                property: nameof(Padding)))
+            {
+                if (!IsHandleCreated)
+                {
+                    UpdateStyles();
+                }
+                else
+                {
+                    // This implies updating the styles.
+                    RecreateHandle();
+
+                    if (GetState(States.LayoutIsDirty))
+                    {
+                        // The above did not cause our layout to be refreshed. We explicitly refresh our
+                        // layout to ensure that any children are repositioned to account for the change
+                        // in whatever could cause a new size (most likely a new BorderStyle related Padding)..
+                        LayoutTransaction.DoLayout(this, this, nameof(Padding));
+                    }
+                }
+            }
+        }
+    }
+
+    private bool ShouldSerializeVisualStylesMode()
+        => Properties.ContainsKey(s_visualStylesModeProperty);
+
+    private void ResetVisualStylesMode()
+        => Properties.RemoveValue(s_visualStylesModeProperty);
+
+    /// <summary>
+    ///  Gets the default visual styles mode for the control. The default setting is ambient to
+    ///  <see cref="Application.DefaultVisualStylesMode"/> whose default is <see cref="VisualStylesMode.Classic"/>.
+    /// </summary>
+    /// <returns>The default visual styles mode for the control.</returns>
+    protected virtual VisualStylesMode DefaultVisualStylesMode => Application.DefaultVisualStylesMode;
+
+    /// <summary>
     ///  Wait for the wait handle to receive a signal: throw an exception if the thread is no longer with us.
     /// </summary>
     private unsafe void WaitForWaitHandle(WaitHandle waitHandle)
@@ -3739,8 +3862,8 @@ public unsafe partial class Control :
     [SRDescription(nameof(SR.ControlDataContextChangedDescr))]
     public event EventHandler? DataContextChanged
     {
-        add => Events.AddHandler(s_dataContextEvent, value);
-        remove => Events.RemoveHandler(s_dataContextEvent, value);
+        add => Events.AddHandler(s_dataContextChangedEvent, value);
+        remove => Events.RemoveHandler(s_dataContextChangedEvent, value);
     }
 
     [SRCategory(nameof(SR.CatDragDrop))]
@@ -6834,7 +6957,7 @@ public unsafe partial class Control :
             return;
         }
 
-        if (Events[s_dataContextEvent] is EventHandler eventHandler)
+        if (Events[s_dataContextChangedEvent] is EventHandler eventHandler)
         {
             eventHandler(this, e);
         }
@@ -7167,6 +7290,28 @@ public unsafe partial class Control :
         }
     }
 
+    /// <summary>
+    ///  Occurs when the <see cref="VisualStylesMode"/> property of the parent of this control changed.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    protected virtual void OnParentVisualStylesModeChanged(EventArgs e)
+    {
+        if (Properties.ContainsKey(s_visualStylesModeProperty)
+            && Equals(Properties.GetObject(s_visualStylesModeProperty), Parent?.VisualStylesMode))
+        {
+            // we need to make it ambient again by removing it.
+            Properties.RemoveValue(s_visualStylesModeProperty);
+
+            // Even though internally we don't store it any longer, and the
+            // value we had stored therefore changed, technically the value
+            // remains the same, so we don't raise the DataContextChanged event.
+            return;
+        }
+
+        // In every other case we're going to raise the event.
+        OnVisualStylesModeChanged(e);
+    }
+
     // OnVisibleChanged/OnParentVisibleChanged is not called when a parent becomes invisible
     internal virtual void OnParentBecameInvisible()
     {
@@ -7286,6 +7431,35 @@ public unsafe partial class Control :
                 {
                     child.OnParentBecameInvisible();
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    ///  Raises the <see cref="VisualStylesModeChanged"/> event.
+    ///  Inheriting classes should override this method to handle this event.
+    ///  Call base.<see cref="OnVisualStylesModeChanged"/> to send this event to any registered event listeners.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    protected virtual void OnVisualStylesModeChanged(EventArgs e)
+    {
+        if (GetAnyDisposingInHierarchy())
+        {
+            return;
+        }
+
+        if (Events[s_visualStylesModeChangedEvent] is EventHandler eventHandler)
+        {
+            eventHandler(this, e);
+        }
+
+        ControlCollection? controlsCollection = (ControlCollection?)Properties.GetObject(s_controlsCollectionProperty);
+
+        if (controlsCollection is not null)
+        {
+            for (int i = 0; i < controlsCollection.Count; i++)
+            {
+                controlsCollection[i].OnParentVisualStylesModeChanged(e);
             }
         }
     }
@@ -10438,7 +10612,6 @@ public unsafe partial class Control :
 
             bool fireChange = false;
 
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates.
             if (GetTopLevel())
             {
                 // The processing of WmShowWindow will set the visibility
@@ -10455,7 +10628,6 @@ public unsafe partial class Control :
                     PInvoke.ShowWindow(HWND, value ? ShowParams : SHOW_WINDOW_CMD.SW_HIDE);
                 }
             }
-#pragma warning restore WFO5001
             else if (IsHandleCreated || (value && _parent?.Created == true))
             {
                 // We want to mark the control as visible so that CreateControl

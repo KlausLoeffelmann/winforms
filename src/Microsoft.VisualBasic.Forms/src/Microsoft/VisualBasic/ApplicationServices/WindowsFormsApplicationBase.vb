@@ -65,13 +65,13 @@ Namespace Microsoft.VisualBasic.ApplicationServices
 
         Private _appSynchronizationContext As SynchronizationContext
 
-#Disable Warning WFO5001 ' Type is for evaluation purposes only and is subject to change or removal in future updates.
-
         ' The ColorMode (Classic/Light, System, Dark) the user assigned to the ApplyApplicationsDefault event.
         ' Note: We aim to expose this to the App Designer in later runtime/VS versions.
         Private _colorMode As SystemColorMode = SystemColorMode.Classic
 
-#Enable Warning WFO5001
+        ' The VisualStylesMode (Default is Classic) the user assigned to the ApplyApplicationsDefault event.
+        ' Note: We aim to expose this to the App Designer in later runtime/VS versions.
+        Private _visualStylesMode As VisualStylesMode = VisualStylesMode.Classic
 
         ' We only need to show the splash screen once.
         ' Protect the user from himself if they are overriding our app model.
@@ -152,7 +152,7 @@ Namespace Microsoft.VisualBasic.ApplicationServices
             ' before the Network object gets created because the network object will be doing a
             ' AsyncOperationsManager.CreateOperation() which captures the execution context. So we must
             ' have our principal on the thread before that happens.
-            If authenticationMode = AuthenticationMode.Windows Then
+            If authenticationMode = authenticationMode.Windows Then
                 Try
                     ' Consider: Sadly, a call to: System.Security.SecurityManager.IsGranted(New SecurityPermission(SecurityPermissionFlag.ControlPrincipal))
                     ' Will only check the THIS caller so you'll always get TRUE.
@@ -194,7 +194,6 @@ Namespace Microsoft.VisualBasic.ApplicationServices
         ''' <value>
         '''  The <see cref="SystemColorMode"/> that the application is running in.
         ''' </value>
-        <Experimental(DiagnosticIDs.ExperimentalDarkMode, UrlFormat:=WinFormsExperimentalUrl)>
         <EditorBrowsable(EditorBrowsableState.Never)>
         Protected Property ColorMode As SystemColorMode
             Get
@@ -250,6 +249,22 @@ Namespace Microsoft.VisualBasic.ApplicationServices
             Set(value As ShutdownMode)
                 ValidateShutdownModeEnumValue(value, NameOf(value))
                 _shutdownStyle = value
+            End Set
+        End Property
+
+        ''' <summary>
+        '''  Gets or sets the VisualStylesMode for the Application.
+        ''' </summary>
+        ''' <returns>
+        '''  The <see cref="VisualStylesMode"/> that the application is running in.
+        ''' </returns>
+        <EditorBrowsable(EditorBrowsableState.Never)>
+        Protected Property VisualStylesMode As VisualStylesMode
+            Get
+                Return _visualStylesMode
+            End Get
+            Set(value As VisualStylesMode)
+                _visualStylesMode = value
             End Set
         End Property
 
@@ -790,15 +805,14 @@ Namespace Microsoft.VisualBasic.ApplicationServices
             '    Once all this is done, we give the User another chance to change the value by code through
             '    the ApplyDefaults event.
             ' Note: Overriding MinimumSplashScreenDisplayTime needs still to keep working!
-#Disable Warning WFO5001 ' Type is for evaluation purposes only and is subject to change or removal in future updates.
             Dim applicationDefaultsEventArgs As New ApplyApplicationDefaultsEventArgs(
                 MinimumSplashScreenDisplayTime,
                 HighDpiMode,
-                ColorMode) With
+                ColorMode,
+                VisualStylesMode) With
             {
                 .MinimumSplashScreenDisplayTime = MinimumSplashScreenDisplayTime
             }
-#Enable Warning WFO5001
 
             RaiseEvent ApplyApplicationDefaults(Me, applicationDefaultsEventArgs)
 
@@ -814,9 +828,8 @@ Namespace Microsoft.VisualBasic.ApplicationServices
 
             _highDpiMode = applicationDefaultsEventArgs.HighDpiMode
 
-#Disable Warning WFO5001 ' Type is for evaluation purposes only and is subject to change or removal in future updates.
-
             _colorMode = applicationDefaultsEventArgs.ColorMode
+            _visualStylesMode = applicationDefaultsEventArgs.VisualStylesMode
 
             ' Then, it's applying what we got back as HighDpiMode.
             Dim dpiSetResult As Boolean = Application.SetHighDpiMode(_highDpiMode)
@@ -832,8 +845,7 @@ Namespace Microsoft.VisualBasic.ApplicationServices
             End If
 
             Application.SetColorMode(_colorMode)
-
-#Enable Warning WFO5001
+            Application.SetDefaultVisualStylesMode(_visualStylesMode)
 
             ' We'll handle "/nosplash" for you.
             If Not (commandLineArgs.Contains("/nosplash") OrElse Me.CommandLineArgs.Contains("-nosplash")) Then
