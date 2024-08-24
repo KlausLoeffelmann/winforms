@@ -3667,13 +3667,6 @@ public unsafe partial class Control :
         => Properties.RemoveValue(s_visualStylesModeProperty);
 
     /// <summary>
-    ///  Gets the default visual styles mode for the control. The default setting is ambient to
-    ///  <see cref="Application.DefaultVisualStylesMode"/> whose default is <see cref="VisualStylesMode.Classic"/>.
-    /// </summary>
-    /// <returns>The default visual styles mode for the control.</returns>
-    protected virtual VisualStylesMode DefaultVisualStylesMode => Application.DefaultVisualStylesMode;
-
-    /// <summary>
     ///  Wait for the wait handle to receive a signal: throw an exception if the thread is no longer with us.
     /// </summary>
     private unsafe void WaitForWaitHandle(WaitHandle waitHandle)
@@ -7288,6 +7281,28 @@ public unsafe partial class Control :
         {
             OnVisibleChanged(e);
         }
+    }
+
+    /// <summary>
+    ///  Occurs when the <see cref="VisualStylesMode"/> property of the parent of this control changed.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    protected virtual void OnParentVisualStylesModeChanged(EventArgs e)
+    {
+        if (Properties.ContainsKey(s_visualStylesModeProperty)
+            && Equals(Properties.GetObject(s_visualStylesModeProperty), Parent?.VisualStylesMode))
+        {
+            // we need to make it ambient again by removing it.
+            Properties.RemoveValue(s_visualStylesModeProperty);
+
+            // Even though internally we don't store it any longer, and the
+            // value we had stored therefore changed, technically the value
+            // remains the same, so we don't raise the DataContextChanged event.
+            return;
+        }
+
+        // In every other case we're going to raise the event.
+        OnVisualStylesModeChanged(e);
     }
 
     /// <summary>
