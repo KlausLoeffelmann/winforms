@@ -1592,6 +1592,21 @@ public abstract partial class TextBoxBase : Control
         base.OnGotFocus(e);
     }
 
+    protected override unsafe void OnGotFocus(EventArgs e)
+    {
+        if (VisualStylesMode >= VisualStylesMode.Net10)
+        {
+            // We need to invalidate for NcPaint, so we draw focused adorners.
+            PInvoke.RedrawWindow(
+                hWnd: this,
+                lprcUpdate: null,
+                hrgnUpdate: HRGN.Null,
+                flags: REDRAW_WINDOW_FLAGS.RDW_FRAME | REDRAW_WINDOW_FLAGS.RDW_INVALIDATE);
+        }
+
+        base.OnGotFocus(e);
+    }
+
     protected override unsafe void OnLostFocus(EventArgs e)
     {
         // We need to invalidate for NcPaint, so we draw un-focused adorners.
