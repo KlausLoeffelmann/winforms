@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
+using System.Windows.Forms.Rendering.CheckBox;
 using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
 
@@ -35,6 +36,7 @@ public partial class CheckBox : ButtonBase
     // A flag indicating if UIA StateChanged event needs to be triggered,
     // to avoid double-triggering when Checked value changes.
     private bool _notifyAccessibilityStateChangedNeeded;
+    private AnimatedToggleSwitchRenderer? _toggleSwitchRenderer;
 
     /// <summary>
     ///  Initializes a new instance of the <see cref="CheckBox"/> class.
@@ -182,6 +184,17 @@ public partial class CheckBox : ButtonBase
             if (_checkState == value)
             {
                 return;
+            }
+
+            bool animationHandlingNeeded = VisualStylesMode >= VisualStylesMode.Net10
+                && Appearance == Appearance.ToggleSwitch;
+
+            if (animationHandlingNeeded)
+            {
+                // This stops any ongoing animation AND sets
+                // the current progress of the animation to the
+                // current visual state of the checkbox.
+                _toggleSwitchRenderer?.StopAnimation();
             }
 
             bool oldChecked = Checked;

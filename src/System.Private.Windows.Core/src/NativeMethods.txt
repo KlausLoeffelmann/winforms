@@ -96,6 +96,7 @@ GetSystemMetrics
 GetThreadLocale
 GetViewportExtEx
 GetViewportOrgEx
+GetWindowDC
 GlobalAlloc
 GlobalFree
 GlobalLock
@@ -144,9 +145,11 @@ MonitorFromRect
 MonitorFromWindow
 MONITORINFOEXW
 MONITORINFOF_*
+NCCALCSIZE_PARAMS
 NONCLIENTMETRICSW
 OBJ_TYPE
 OffsetViewportOrgEx
+OffsetClipRgn
 OLE_E_ADVISENOTSUPPORTED
 OLE_E_INVALIDRECT
 OLE_E_NOCONNECTION

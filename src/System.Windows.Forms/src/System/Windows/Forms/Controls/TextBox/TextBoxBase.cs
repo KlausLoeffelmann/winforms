@@ -47,6 +47,11 @@ public abstract partial class TextBoxBase : Control
     private static readonly object s_multilineChangedEvent = new();
     private static readonly object s_readOnlyChangedEvent = new();
 
+    private const int VisualStylesFixed3DBorderPadding = 5;
+    private const int VisualStylesFixedSingleBorderPadding = 4;
+    private const int VisualStylesNoBorderPadding = 3;
+    private const int BorderThickness = 1;
+
     /// <summary>
     ///  The current border for this edit control.
     /// </summary>
@@ -81,6 +86,8 @@ public abstract partial class TextBoxBase : Control
 
     // We store all boolean properties in here.
     private BitVector32 _textBoxFlags;
+    private bool _triggerNewClientSizeRequest;
+    private NonClientBitmapCache? _cachedBitmap;
 
     /// <summary>
     ///  Creates a new TextBox control. Uses the parent's current font and color
@@ -93,6 +100,7 @@ public abstract partial class TextBoxBase : Control
 
         _textBoxFlags[s_autoSize | s_hideSelection | s_wordWrap | s_shortcutsEnabled] = true;
         SetStyle(ControlStyles.FixedHeight, _textBoxFlags[s_autoSize]);
+
         SetStyle(ControlStyles.StandardClick
                 | ControlStyles.StandardDoubleClick
                 | ControlStyles.UseTextForAccessibility
@@ -417,22 +425,40 @@ public abstract partial class TextBoxBase : Control
             cp.Style &= ~(int)WINDOW_STYLE.WS_BORDER;
             cp.ExStyle &= ~(int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
 
-            switch (_borderStyle)
+            if (VisualStylesMode >= VisualStylesMode.Net10)
             {
-                case BorderStyle.Fixed3D:
-                    cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
-                    break;
-                case BorderStyle.FixedSingle:
-                    cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
-                    break;
-            }
-
-            if (_textBoxFlags[s_multiline])
-            {
-                cp.Style |= PInvoke.ES_MULTILINE;
-                if (_textBoxFlags[s_wordWrap])
+                // We draw the borders ourselves for the visual styles for .NET 9 / 10 onwards.
+                if (_textBoxFlags[s_multiline])
                 {
-                    cp.Style &= ~PInvoke.ES_AUTOHSCROLL;
+                    cp.Style |= PInvoke.ES_MULTILINE;
+
+                    if (_textBoxFlags[s_multiline])
+                        if (_textBoxFlags[s_wordWrap])
+                        {
+                            cp.Style &= ~PInvoke.ES_AUTOHSCROLL;
+                        }
+                }
+            }
+            else
+            {
+                switch (_borderStyle)
+                {
+                    case BorderStyle.Fixed3D:
+                        cp.ExStyle |= (int)WINDOW_EX_STYLE.WS_EX_CLIENTEDGE;
+                        break;
+
+                    case BorderStyle.FixedSingle:
+                        cp.Style |= (int)WINDOW_STYLE.WS_BORDER;
+                        break;
+                }
+
+                if (_textBoxFlags[s_multiline])
+                {
+                    cp.Style |= PInvoke.ES_MULTILINE;
+                    if (_textBoxFlags[s_wordWrap])
+                    {
+                        cp.Style &= ~PInvoke.ES_AUTOHSCROLL;
+                    }
                 }
             }
 
@@ -479,13 +505,7 @@ public abstract partial class TextBoxBase : Control
     ///  Deriving classes can override this to configure a default size for their control.
     ///  This is more efficient than setting the size in the control's constructor.
     /// </summary>
-    protected override Size DefaultSize
-    {
-        get
-        {
-            return new Size(100, PreferredHeight);
-        }
-    }
+    protected override Size DefaultSize => new Size(100, PreferredHeight);
 
     /// <summary>
     ///  Gets or sets the foreground color of the control.
@@ -752,15 +772,6 @@ public abstract partial class TextBoxBase : Control
     {
         add => Events.AddHandler(s_multilineChangedEvent, value);
         remove => Events.RemoveHandler(s_multilineChangedEvent, value);
-    }
-
-    [Browsable(false)]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public new Padding Padding
-    {
-        get => base.Padding;
-        set => base.Padding = value;
     }
 
     [Browsable(false)]

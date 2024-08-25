@@ -7,7 +7,7 @@ namespace System.Windows.Forms;
 
 internal static class DisplayInformation
 {
-    private static bool s_highContrast;               // whether we are under hight contrast mode
+    private static bool s_highContrast;               // whether we are under high contrast mode
     private static bool s_lowRes;                     // whether we are under low resolution mode
     private static bool s_highContrastSettingValid;   // indicates whether the high contrast setting is correct
     private static bool s_lowResSettingValid;         // indicates whether the low resolution setting is correct
