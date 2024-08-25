@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
+using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms.Layout;
@@ -15,8 +16,7 @@ using Windows.Win32.UI.Controls.RichEdit;
 namespace System.Windows.Forms;
 
 /// <summary>
-///  Implements the basic functionality required by text
-///  controls.
+///  Implements the basic functionality required by text controls.
 /// </summary>
 [DefaultEvent(nameof(TextChanged))]
 [DefaultBindingProperty(nameof(Text))]
@@ -58,8 +58,7 @@ public abstract partial class TextBoxBase : Control
     private BorderStyle _borderStyle = BorderStyle.Fixed3D;
 
     /// <summary>
-    ///  Controls the maximum length of text in the edit control.
-    ///  Matches the Windows limit.
+    ///  Controls the maximum length of text in the edit control. Matches the Windows limit.
     /// </summary>
     private int _maxLength = 32767;
 
@@ -76,9 +75,9 @@ public abstract partial class TextBoxBase : Control
     private int _selectionLength;
 
     /// <summary>
-    ///  Controls firing of click event (Left click).
-    ///  This is used by TextBox, RichTextBox and MaskedTextBox, code was moved down from TextBox/RichTextBox
-    ///  but cannot make it as default behavior to avoid introducing breaking changes.
+    ///  Controls firing of click event (Left click). This is used by TextBox, RichTextBox and
+    ///  MaskedTextBox, code was moved down from TextBox/RichTextBox but cannot make it as
+    ///  default behavior to avoid introducing breaking changes.
     /// </summary>
     private bool _doubleClickFired;
 
@@ -110,18 +109,15 @@ public abstract partial class TextBoxBase : Control
         SetStyle(ControlStyles.ApplyThemingImplicitly, true);
 #pragma warning restore WFO5001
 
-        // cache requestedHeight. Note: Control calls DefaultSize (overridable) in the constructor
+        // Cache requestedHeight. Note: Control calls DefaultSize (overridable) in the constructor
         // to set the control's cached height that is returned when calling Height, so we just
         // need to get the cached height here.
         _requestedHeight = Height;
     }
 
     /// <summary>
-    ///  Gets or sets
-    ///  a value indicating whether pressing the TAB key
-    ///  in a multiline text box control types
-    ///  a TAB character in the control instead of moving the focus to the next control
-    ///  in the tab order.
+    ///  Gets or sets a value indicating whether pressing the TAB key in a multiline text box control types
+    ///  a TAB character in the control instead of moving the focus to the next control in the tab order.
     /// </summary>
     [SRCategory(nameof(SR.CatBehavior))]
     [DefaultValue(false)]
@@ -238,13 +234,14 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets a value indicating whether the size
-    ///  of the control automatically adjusts when the font assigned to the control
-    ///  is changed.
-    ///
-    ///  Note: this works differently than other Controls' AutoSize, so we're hiding
-    ///  it to avoid confusion.
+    ///  Gets or sets a value indicating whether the size of the control automatically adjusts
+    ///  when the font assigned to the control is changed.
     /// </summary>
+    /// <remarks>
+    ///  <para>
+    ///  Note: This works differently than other Controls' AutoSize, so we're hiding it to avoid confusion.
+    ///  </para>
+    /// </remarks>
     [SRCategory(nameof(SR.CatBehavior))]
     [DefaultValue(true)]
     [Localizable(true)]
@@ -254,10 +251,7 @@ public abstract partial class TextBoxBase : Control
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override bool AutoSize
     {
-        get
-        {
-            return _textBoxFlags[s_autoSize];
-        }
+        get => _textBoxFlags[s_autoSize];
         set
         {
             // Note that we intentionally do not call base. TextBoxes size themselves by
@@ -269,7 +263,6 @@ public abstract partial class TextBoxBase : Control
                 _textBoxFlags[s_autoSize] = value;
 
                 // AutoSize's effects are ignored for a multi-line textbox
-                //
                 if (!Multiline)
                 {
                     SetStyle(ControlStyles.FixedHeight, value);
@@ -348,8 +341,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets the border type
-    ///  of the text box control.
+    ///  Gets or sets the border type of the text box control.
     /// </summary>
     [SRCategory(nameof(SR.CatAppearance))]
     [DefaultValue(BorderStyle.Fixed3D)]
@@ -574,8 +566,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or
-    ///  sets the lines of text in an text box control.
+    ///  Gets or sets the lines of text in an text box control.
     /// </summary>
     [SRCategory(nameof(SR.CatAppearance))]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -631,7 +622,7 @@ public abstract partial class TextBoxBase : Control
         }
         set
         {
-            // unparse this string list...
+            // un-parse this string list...
             if (value is not null && value.Length > 0)
             {
                 Text = string.Join(Environment.NewLine, value);
@@ -644,8 +635,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets the maximum number of
-    ///  characters the user can type into the text box control.
+    ///  Gets or sets the maximum number of characters the user can type into the text box control.
     /// </summary>
     [SRCategory(nameof(SR.CatBehavior))]
     [DefaultValue(32767)]
@@ -725,8 +715,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets a value indicating whether this
-    ///  is a multiline text box control.
+    ///  Gets or sets a value indicating whether this is a multiline text box control.
     /// </summary>
     [SRCategory(nameof(SR.CatBehavior))]
     [DefaultValue(false)]
@@ -735,10 +724,7 @@ public abstract partial class TextBoxBase : Control
     [RefreshProperties(RefreshProperties.All)]
     public virtual bool Multiline
     {
-        get
-        {
-            return _textBoxFlags[s_multiline];
-        }
+        get => _textBoxFlags[s_multiline];
         set
         {
             if (_textBoxFlags[s_multiline] != value)
@@ -793,22 +779,122 @@ public abstract partial class TextBoxBase : Control
     private protected virtual bool PasswordProtect => false;
 
     /// <summary>
-    ///  Returns the preferred
-    ///  height for a single-line text box.
+    ///  Returns the preferred height for a single-line text box.
     /// </summary>
     [SRCategory(nameof(SR.CatLayout))]
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     [SRDescription(nameof(SR.TextBoxPreferredHeightDescr))]
-    public int PreferredHeight
+    public int PreferredHeight =>
+        VisualStylesMode switch
+        {
+            VisualStylesMode.Disabled => PreferredHeightClassic,
+            VisualStylesMode.Classic => PreferredHeightClassic,
+            >= VisualStylesMode.Net10 => PreferredHeightCore,
+
+            // We'll should never be here.
+            _ => throw new InvalidEnumArgumentException(
+                argumentName: nameof(VisualStylesMode),
+                invalidValue: (int)VisualStylesMode,
+                enumClass: typeof(VisualStylesMode))
+        };
+
+    protected virtual int PreferredHeightCore
+    {
+        get
+        {
+            // For modern Visual Styles we take the Padding and the adorner padding into account when calculating the preferred height.
+            int height = FontHeight
+                + GetVisualStylesPadding(true).Vertical;
+
+            return height;
+        }
+    }
+
+    /// <summary>
+    ///  Defines the visible part of the padding.
+    ///  This is calculated and not adjustable by properties.
+    ///  The visible part of the padding is the part by what we extend the real-estate
+    ///  of the control with its back color. The invisible part of the Padding is the
+    ///  part, by which we extend the real-estate of the control with the back color of the parent control.
+    /// </summary>
+    /// <returns>The visible padding dimensions.</returns>
+    private protected Padding GetVisualStylesPadding(bool includeScrollbars)
+    {
+        int offset = BorderThickness;
+
+        Padding padding = BorderStyle switch
+        {
+            BorderStyle.Fixed3D => new Padding(
+                left: VisualStylesFixed3DBorderPadding + offset,
+                top: VisualStylesFixed3DBorderPadding + offset,
+                right: VisualStylesFixed3DBorderPadding + offset,
+                bottom: VisualStylesFixed3DBorderPadding + offset),
+
+            BorderStyle.FixedSingle => new Padding(
+                left: VisualStylesFixedSingleBorderPadding + offset,
+                top: VisualStylesFixedSingleBorderPadding + offset,
+                right: VisualStylesFixedSingleBorderPadding + offset,
+                bottom: VisualStylesFixedSingleBorderPadding + offset),
+
+            BorderStyle.None => new Padding(
+                left: VisualStylesNoBorderPadding,
+                top: VisualStylesNoBorderPadding,
+                right: VisualStylesNoBorderPadding + offset,
+                // We still need some extra space for the Focus indication.
+                bottom: VisualStylesNoBorderPadding + offset),
+
+            _ => Padding.Empty,
+        };
+
+        if (includeScrollbars)
+        {
+            padding += GetScrollBarPadding();
+        }
+
+        padding += Padding;
+        return padding;
+    }
+
+    private protected virtual Padding GetScrollBarPadding()
+    {
+        Padding padding = Padding.Empty;
+
+        // Are the scrollbars visible?
+        var gwStyle = (WINDOW_STYLE)PInvoke.GetWindowLong(this, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+        bool hasHScroll = (gwStyle & WINDOW_STYLE.WS_HSCROLL) != 0;
+        bool hasVScroll = (gwStyle & WINDOW_STYLE.WS_VSCROLL) != 0;
+
+        if (hasHScroll)
+        {
+            padding.Bottom += SystemInformation.GetHorizontalScrollBarHeightForDpi(_deviceDpi);
+        }
+
+        if (hasVScroll)
+        {
+            if (RightToLeft == RightToLeft.Yes)
+            {
+                padding.Left += SystemInformation.GetVerticalScrollBarWidthForDpi(_deviceDpi);
+            }
+            else
+            {
+                padding.Right += SystemInformation.GetVerticalScrollBarWidthForDpi(_deviceDpi);
+            }
+        }
+
+        return padding;
+    }
+
+    private int PreferredHeightClassic
     {
         get
         {
             // COMPAT we must return the same busted height we did in Everett, even
-            // if it doesn't take multiline and word wrap into account. For better accuracy and/or wrapping use
-            // GetPreferredSize instead.
+            // if it doesn't take multiline and word wrap into account.
+            // For better accuracy and/or wrapping use GetPreferredSize instead.
             int height = FontHeight;
+
             if (_borderStyle != BorderStyle.None)
             {
                 height += SystemInformation.GetBorderSizeForDpi(_deviceDpi).Height * 4 + 3;
@@ -818,37 +904,17 @@ public abstract partial class TextBoxBase : Control
         }
     }
 
-    // GetPreferredSizeCore
-    //  This method can return a different value than PreferredHeight!  It properly handles
-    //  border style + multiline and wordwrap.
-
+    /// <summary>
+    ///  Calculates the preferred size of the text box for multi-line text scenarios.
+    ///  Note that this calculation can be returning different values compared to <see cref="PreferredHeight"/>.
+    /// </summary>
+    /// <param name="proposedConstraints">The already existing proposed constraints.</param>
+    /// <returns>The preferred size.</returns>
     internal override Size GetPreferredSizeCore(Size proposedConstraints)
     {
-        // 3px vertical space is required between the text and the border to keep the last
-        // line from being clipped.
-        // This 3 pixel size was added in everett and we do this to maintain compat.
-        // old everett behavior was FontHeight + [SystemInformation.BorderSize.Height * 4 + 3]
-        // however the [ ] was only added if borderstyle was not none.
-        Size bordersAndPadding = SizeFromClientSize(Size.Empty) + Padding.Size;
-
-        if (BorderStyle != BorderStyle.None)
-        {
-            bordersAndPadding += new Size(0, 3);
-        }
-
-        if (BorderStyle == BorderStyle.FixedSingle)
-        {
-            // Bump these by 2px to match BorderStyle.Fixed3D - they'll be omitted from the SizeFromClientSize call.
-            bordersAndPadding.Width += 2;
-            bordersAndPadding.Height += 2;
-        }
-
-        // Reduce constraints by border/padding size
-        proposedConstraints -= bordersAndPadding;
-
-        // Fit the text to the remaining space.
-        // Fixed for .NET Framework 4.0
+        Padding padding = default;
         TextFormatFlags format = TextFormatFlags.NoPrefix;
+
         if (!Multiline)
         {
             format |= TextFormatFlags.SingleLine;
@@ -858,11 +924,53 @@ public abstract partial class TextBoxBase : Control
             format |= TextFormatFlags.WordBreak;
         }
 
+        if (VisualStylesMode >= VisualStylesMode.Net10)
+        {
+            // For Versions >=10, we take our modern Style adorners into account
+            // when we're calculating the preferred height.
+            padding = GetVisualStylesPadding(true);
+            proposedConstraints -= padding.Size;
+        }
+        else
+        {
+            // We need this only for measuring the text.
+            Size bordersAndPadding = SizeFromClientSize(Size.Empty) + Padding.Size;
+
+            if (BorderStyle != BorderStyle.None)
+            {
+                // 3px vertical space is required between the text and the border to keep the last
+                // line from being clipped.
+                // This 3 pixel size was added in Everett and we do this to maintain compat.
+                // old Everett behavior was FontHeight + [SystemInformation.BorderSize.Height * 4 + 3]
+                // however the [ ] was only added if BorderStyle was not none.
+                bordersAndPadding += new Size(0, 3);
+            }
+
+            if (BorderStyle == BorderStyle.FixedSingle)
+            {
+                // Bump these by 2px to match BorderStyle.Fixed3D - they'll be omitted from the SizeFromClientSize call.
+                bordersAndPadding.Width += 2;
+                bordersAndPadding.Height += 2;
+            }
+
+            // We used to add the borders and padding to the returned size - this remains effectively the same:
+            padding.Left = 0;
+            padding.Top = 0;
+            padding.Right = bordersAndPadding.Width;
+            padding.Bottom = bordersAndPadding.Height;
+
+            // Reduce constraints by border/padding size
+            proposedConstraints -= bordersAndPadding;
+        }
+
         Size textSize = TextRenderer.MeasureText(Text, Font, proposedConstraints, format);
 
         // We use this old computation as a lower bound to ensure backwards compatibility.
         textSize.Height = Math.Max(textSize.Height, FontHeight);
-        Size preferredSize = textSize + bordersAndPadding;
+
+        Size preferredSize = textSize
+            + new Size(padding.Horizontal, padding.Vertical);
+
         return preferredSize;
     }
 
@@ -918,7 +1026,8 @@ public abstract partial class TextBoxBase : Control
             }
 
             Debug.Assert(end <= len,
-                $"SelectionEnd is outside the set of valid caret positions for the current WindowText (end ={end}, WindowText.Length ={len})");
+                $"SelectionEnd is outside the set of valid caret positions for the current " +
+                $"WindowText (end ={end}, WindowText.Length ={len})");
         }
 #endif
     }
@@ -1017,8 +1126,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets the number of characters selected in the text
-    ///  box.
+    ///  Gets or sets the number of characters selected in the text box.
     /// </summary>
     [SRCategory(nameof(SR.CatAppearance))]
     [Browsable(false)]
@@ -1029,7 +1137,6 @@ public abstract partial class TextBoxBase : Control
         get
         {
             GetSelectionStartAndLength(out int start, out int length);
-
             return length;
         }
 
@@ -1047,9 +1154,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets the starting
-    ///  point of text selected in the text
-    ///  box.
+    ///  Gets or sets the starting point of text selected in the text box.
     /// </summary>
     [SRCategory(nameof(SR.CatAppearance))]
     [Browsable(false)]
@@ -1072,8 +1177,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Gets or sets
-    ///  the current text in the text box.
+    ///  Gets or sets the current text in the text box.
     /// </summary>
     [Localizable(true)]
     [AllowNull]
@@ -1099,7 +1203,6 @@ public abstract partial class TextBoxBase : Control
     public virtual int TextLength
         // Note: Currently WinForms does not fully support surrogates. If
         // the text contains surrogate characters this property may return incorrect values.
-
         => IsHandleCreated ? PInvoke.GetWindowTextLength(this) : Text.Length;
 
     internal override string WindowText
@@ -1111,7 +1214,6 @@ public abstract partial class TextBoxBase : Control
 
             // Since setting the WindowText while the handle is created generates a WM_COMMAND message, we must trap
             // that case and prevent the event from getting fired, or we get double "TextChanged" events.
-
             if (!WindowText.Equals(value))
             {
                 _textBoxFlags[s_codeUpdateText] = true;
@@ -1214,6 +1316,7 @@ public abstract partial class TextBoxBase : Control
                 }
 
                 _integralHeightAdjust = true;
+
                 try
                 {
                     Height = saveHeight;
@@ -1266,14 +1369,10 @@ public abstract partial class TextBoxBase : Control
     /// <summary>
     ///  Clears all text from the text box control.
     /// </summary>
-    public void Clear()
-    {
-        Text = null;
-    }
+    public void Clear() => Text = null;
 
     /// <summary>
-    ///  Clears information about the most recent operation
-    ///  from the undo buffer of the text box.
+    ///  Clears information about the most recent operation from the undo buffer of the text box.
     /// </summary>
     public void ClearUndo()
     {
@@ -1285,7 +1384,8 @@ public abstract partial class TextBoxBase : Control
 
     protected bool ContainsNavigationKeyCode(Keys keyCode) => keyCode switch
     {
-        Keys.Up or Keys.Down or Keys.PageUp or Keys.PageDown or Keys.Home or Keys.End or Keys.Left or Keys.Right => true,
+        Keys.Up or Keys.Down or Keys.PageUp or Keys.PageDown
+        or Keys.Home or Keys.End or Keys.Left or Keys.Right => true,
         _ => false,
     };
 
@@ -1298,6 +1398,11 @@ public abstract partial class TextBoxBase : Control
 
     protected override void CreateHandle()
     {
+        // Should the Handle be created at this point,
+        // we need to reset the flag to ensure that the
+        // new client size is requested.
+        _triggerNewClientSizeRequest = false;
+
         // This "creatingHandle" stuff is to avoid property change events
         // when we set the Text property.
         _textBoxFlags[s_creatingHandle] = true;
@@ -1402,6 +1507,7 @@ public abstract partial class TextBoxBase : Control
     {
         _textBoxFlags[s_modified] = Modified;
         _textBoxFlags[s_setSelectionOnHandleCreated] = true;
+
         // Update text selection cached values to be restored when recreating the handle.
         GetSelectionStartAndLength(out _selectionStart, out _selectionLength);
         base.OnHandleDestroyed(e);
@@ -1426,7 +1532,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  TextBox / RichTextBox Onpaint.
+    ///  TextBox / RichTextBox OnPaint.
     /// </summary>
     /// <hideinheritance/>
     [Browsable(false)]
@@ -1457,6 +1563,33 @@ public abstract partial class TextBoxBase : Control
     {
         base.OnFontChanged(e);
         AdjustHeight(false);
+    }
+
+    protected override unsafe void OnGotFocus(EventArgs e)
+    {
+        if (VisualStylesMode >= VisualStylesMode.Net10)
+        {
+            // We need to invalidate for NcPaint, so we draw focused adorners.
+            PInvoke.RedrawWindow(
+                hWnd: this,
+                lprcUpdate: null,
+                hrgnUpdate: HRGN.Null,
+                flags: REDRAW_WINDOW_FLAGS.RDW_FRAME | REDRAW_WINDOW_FLAGS.RDW_INVALIDATE);
+        }
+
+        base.OnGotFocus(e);
+    }
+
+    protected override unsafe void OnLostFocus(EventArgs e)
+    {
+        // We need to invalidate for NcPaint, so we draw un-focused adorners.
+        PInvoke.RedrawWindow(
+            hWnd: this,
+            lprcUpdate: null,
+            hrgnUpdate: HRGN.Null,
+            flags: REDRAW_WINDOW_FLAGS.RDW_FRAME | REDRAW_WINDOW_FLAGS.RDW_INVALIDATE);
+
+        base.OnLostFocus(e);
     }
 
     protected virtual void OnHideSelectionChanged(EventArgs e)
@@ -1526,10 +1659,25 @@ public abstract partial class TextBoxBase : Control
         }
     }
 
+    protected override unsafe void OnSizeChanged(EventArgs e)
+    {
+        if (VisualStylesMode >= VisualStylesMode.Net10)
+        {
+            // Send a message to invalidate the non-client area to ensure that the border is drawn correctly.
+            PInvoke.RedrawWindow(
+                hWnd: this,
+                lprcUpdate: null,
+                hrgnUpdate: HRGN.Null,
+                flags: REDRAW_WINDOW_FLAGS.RDW_FRAME | REDRAW_WINDOW_FLAGS.RDW_INVALIDATE);
+        }
+
+        base.OnSizeChanged(e);
+    }
+
     protected override void OnTextChanged(EventArgs e)
     {
         // since AutoSize existed in Everett, (and is the default) we can't
-        // relayout the parent when the "PreferredSize" of the control changes.
+        // re-layout the parent when the "PreferredSize" of the control changes.
         // this means a multiline = true textbox won't naturally grow in height when
         // the text changes.
         CommonProperties.xClearPreferredSizeCache(this);
@@ -1590,12 +1738,16 @@ public abstract partial class TextBoxBase : Control
 
     /// <summary>
     ///  Returns the number of the line containing a specified character position
-    ///  in a textbox. Note that this returns the physical line number
-    ///  and not the conceptual line number. For example, if the first conceptual
-    ///  line (line number 0) word-wraps and extends to the second line, and if
-    ///  you pass the index of a overflowed character, GetLineFromCharIndex would
-    ///  return 1 and not 0.
+    ///  in a textbox.
     /// </summary>
+    /// <remarks>
+    ///  <para>
+    ///    Note that this returns the physical line number and not the conceptual line number.
+    ///    For example, if the first conceptual line (line number 0) word-wraps and extends
+    ///    to the second line, and if you pass the index of a overflowed character, GetLineFromCharIndex
+    ///    would return 1 and not 0.
+    ///  </para>
+    /// </remarks>
     public virtual int GetLineFromCharIndex(int index) => (int)PInvoke.SendMessage(this, PInvoke.EM_LINEFROMCHAR, (WPARAM)index);
 
     /// <summary>
@@ -1665,7 +1817,6 @@ public abstract partial class TextBoxBase : Control
             //  3. If the first visible line is smaller than the start of the selection, then we are done:
             //      The selection fits inside the RichTextBox display rectangle.
             //  4. Otherwise, scroll the selection to the top of the RichTextBox.
-
             GetSelectionStartAndLength(out int selStart, out int selLength);
             int selStartLine = GetLineFromCharIndex(selStart);
 
@@ -1735,12 +1886,15 @@ public abstract partial class TextBoxBase : Control
 
     /// <summary>
     ///  Performs the actual select without doing arg checking.
-    ///
-    ///  Send in -1 for the textLen parameter if you don't have the text
-    ///  length cached when calling this method. It will be computed.
-    ///  But if you do have it cached, please pass it in. This will avoid
-    ///  the expensive call to the TextLength property.
     /// </summary>
+    /// <remarks>
+    ///  <para>
+    ///   Send in -1 for the textLen parameter if you don't have the text
+    ///   length cached when calling this method. It will be computed.
+    ///   But if you do have it cached, please pass it in. This will avoid
+    ///   the expensive call to the TextLength property.
+    ///  </para>
+    /// </remarks>
     private protected virtual void SelectInternal(int start, int length, int textLen)
     {
         // if our handle is created - send message...
@@ -1900,7 +2054,6 @@ public abstract partial class TextBoxBase : Control
 
         // IMPORTANT: Avoid off-by-1 errors!
         // The end value passed in is the character immediately after the last character selected.
-
         int newStart = start == 0 ? 0 : e.GetCharCount(bytes, 0, start);
         end = newStart + e.GetCharCount(bytes, start, end - start);
         start = newStart;
@@ -1928,7 +2081,6 @@ public abstract partial class TextBoxBase : Control
         }
 
         // Make sure start and end are within the string
-        //
         if (start < 0)
         {
             start = 0;
@@ -1951,7 +2103,6 @@ public abstract partial class TextBoxBase : Control
 
         // IMPORTANT: Avoid off-by-1 errors!
         // The end value passed in is the character immediately after the last character selected.
-
         int newStart = start == 0 ? 0 : e.GetByteCount(str.AsSpan(0, start));
         end = newStart + e.GetByteCount(str.AsSpan(start, end - start));
         start = newStart;
@@ -1963,8 +2114,7 @@ public abstract partial class TextBoxBase : Control
     }
 
     /// <summary>
-    ///  Provides some interesting information for the TextBox control in
-    ///  String form.
+    ///  Provides some interesting information for the TextBox control in string form.
     /// </summary>
     public override string ToString()
     {
@@ -1994,6 +2144,8 @@ public abstract partial class TextBoxBase : Control
 
     internal override HBRUSH InitializeDCForWmCtlColor(HDC dc, MessageId msg)
     {
+        InitializeClientArea(dc, (HWND)Handle);
+
         if (msg == PInvoke.WM_CTLCOLORSTATIC && !ShouldSerializeBackColor())
         {
             // Let the Win32 Edit control handle background colors itself.
@@ -2007,16 +2159,249 @@ public abstract partial class TextBoxBase : Control
         }
     }
 
+    private void WmNcPaint(ref Message m)
+    {
+        if (VisualStylesMode < VisualStylesMode.Net10)
+        {
+            base.WndProc(ref m);
+            return;
+        }
+
+        HWND hwnd = (HWND)m.HWnd;
+        HDC hdc = PInvokeCore.GetWindowDC((HWND)m.HWnd);
+
+        // Get the Graphics Object from the DC:
+        using Graphics graphics = Graphics.FromHdc(hdc);
+
+        try
+        {
+            base.WndProc(ref m);
+            OnNcPaint(graphics);
+        }
+        finally
+        {
+            graphics.Dispose();
+            int result = PInvokeCore.ReleaseDC(hwnd, hdc);
+            Debug.Assert(result != 0);
+        }
+    }
+
+    private protected virtual void OnNcPaint(Graphics graphics)
+    {
+        const int cornerRadius = 15;
+
+        Padding systemPadding = GetVisualStylesPadding(false);
+
+        Color adornerColor = ForeColor;
+        Color parentBackColor = Parent?.BackColor ?? BackColor;
+        Color clientBackColor = BackColor;
+
+        using var parentBackgroundBrush = parentBackColor.GetCachedSolidBrushScope();
+        using var clientBackgroundBrush = clientBackColor.GetCachedSolidBrushScope();
+        using var adornerBrush = adornerColor.GetCachedSolidBrushScope();
+        using var adornerPen = adornerColor.GetCachedPenScope(BorderThickness);
+        using var focusPen = SystemColors.MenuHighlight.GetCachedPenScope(BorderThickness);
+
+        Rectangle bounds = new Rectangle(
+            x: 0,
+            y: 0,
+            width: Bounds.Width,
+            height: Bounds.Height);
+
+        Padding clientPadding = GetVisualStylesPadding(false);
+
+        // This is the client area without the padding:
+        Rectangle clientBounds = new(
+            clientPadding.Left,
+            clientPadding.Top,
+            bounds.Width - clientPadding.Horizontal,
+            bounds.Height - clientPadding.Vertical);
+
+        // This is the client area of the actual original edit control.
+        Rectangle deflatedBounds = bounds;
+
+        // Making sure we never color outside the lines:
+        deflatedBounds.Width -= 1;
+        deflatedBounds.Height -= 1;
+
+        // When we are later pasting the offscreen bitmap onto the original graphics object,
+        // we need to exclude the client area from the clipping region.
+        using Region region = new(bounds);
+        graphics.Clip = region;
+        graphics.ExcludeClip(clientBounds);
+
+        // Create a bitmap to draw on
+        _cachedBitmap ??= new NonClientBitmapCache(this, bounds.Width, bounds.Height);
+        _cachedBitmap.EnsureSize(bounds.Width, bounds.Height);
+
+        Bitmap offscreenBitmap = _cachedBitmap.Bitmap;
+        using Graphics offscreenGraphics = _cachedBitmap.GetNewGraphics();
+
+        // We need Anti-Aliasing:
+        offscreenGraphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+        bounds.Inflate(1, 1);
+
+        // Fill the background with the specified brush:
+        offscreenGraphics.FillRectangle(parentBackgroundBrush, bounds);
+
+        switch (BorderStyle)
+        {
+            case BorderStyle.None:
+
+                // Just fill a Rectangle
+                offscreenGraphics.FillRectangle(
+                    clientBackgroundBrush,
+                    deflatedBounds);
+
+                break;
+
+            case BorderStyle.FixedSingle:
+
+                // Draw a filled Rectangle.
+                offscreenGraphics.FillRectangle(
+                    clientBackgroundBrush,
+                    deflatedBounds);
+
+                // Draw a Rectangle with the border thickness
+                offscreenGraphics.DrawRectangle(
+                    adornerPen,
+                    deflatedBounds);
+
+                break;
+
+            case BorderStyle.Fixed3D:
+
+                // Fill a rounded Rectangle
+                offscreenGraphics.FillRoundedRectangle(
+                    clientBackgroundBrush,
+                    deflatedBounds,
+                    new Size(cornerRadius, cornerRadius));
+
+                // Draw a rounded Rectangle with the border thickness
+                offscreenGraphics.DrawRoundedRectangle(
+                    adornerPen,
+                    deflatedBounds,
+                    new Size(cornerRadius, cornerRadius));
+
+                break;
+        }
+
+        // Draw the focus just as one line over the bottom border:
+        if (Focused)
+        {
+            switch (BorderStyle)
+            {
+                case BorderStyle.None:
+                case BorderStyle.FixedSingle:
+
+                    DrawStandardFocusLine(
+                        focusPen,
+                        x1: deflatedBounds.Left,
+                        y1: deflatedBounds.Bottom,
+                        x2: deflatedBounds.Right,
+                        y2: deflatedBounds.Bottom);
+                    break;
+
+                case BorderStyle.Fixed3D:
+                    // We must shorten the line on both sides to not draw into the curve:
+
+                    Draw3DFocusLine(
+                        focusPen,
+                        x1: deflatedBounds.Left + (cornerRadius - 3) / 2,
+                        y1: deflatedBounds.Bottom,
+                        x2: deflatedBounds.Right - (cornerRadius - 3) / 2,
+                        y2: deflatedBounds.Bottom);
+                    break;
+            }
+        }
+
+        // Finally, draw the bitmap onto the original graphics object
+        graphics.DrawImageUnscaled(offscreenBitmap, Point.Empty);
+
+        void DrawStandardFocusLine(RefCountedCache<Pen, Color, Color>.Scope focusPen, int x1, int y1, int x2, int y2)
+        {
+            offscreenGraphics.DrawLine(focusPen, x1, y1, x2, y2);
+            offscreenGraphics.DrawLine(focusPen, x1, y1 - 1, x2, y2 - 1);
+        }
+
+        void Draw3DFocusLine(RefCountedCache<Pen, Color, Color>.Scope focusPen, int x1, int y1, int x2, int y2)
+        {
+            offscreenGraphics.DrawLine(focusPen, x1, y1, x2, y2);
+            offscreenGraphics.DrawLine(focusPen, x1 - 2, y1 - 1, x2 + 2, y2 - 1);
+            offscreenGraphics.DrawLine(focusPen, x1 - 3, y1 - 2, x2 + 3, y2 - 2);
+        }
+    }
+
+    private protected virtual unsafe void InitializeClientArea(HDC hDC, HWND hwnd)
+    {
+        // We only want to do this for VisualStylesMode >= Version10.
+        // Also, we do that only one time per instance,
+        // but we need to reset this, when the handle is recreated.
+        if (VisualStylesMode < VisualStylesMode.Net10
+            || _triggerNewClientSizeRequest)
+        {
+            return;
+        }
+
+        _triggerNewClientSizeRequest = true;
+
+        // Get the window bounds
+        Rectangle bounds = Bounds;
+
+        // Call SetWindowPos with the current Bounds with SWP_FRAMECHANGED flag.
+        // Only then we do not change the Window pos/size, but we'll get that WmNcCalcSize message version
+        // that we need to adjust the client area.
+        PInvoke.SetWindowPos(
+            hWnd: this,
+            hWndInsertAfter: HWND.HWND_TOP,
+            X: 0,
+            Y: 0,
+            cx: 0,
+            cy: 0,
+            uFlags: SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED
+                | SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE
+                | SET_WINDOW_POS_FLAGS.SWP_NOMOVE
+                | SET_WINDOW_POS_FLAGS.SWP_NOSIZE
+                | SET_WINDOW_POS_FLAGS.SWP_NOZORDER);
+
+        Invalidate(true);
+    }
+
+    private unsafe void WmNcCalcSize(ref Message m)
+    {
+        // Make sure _we_ actually kicked this off.
+        if (_triggerNewClientSizeRequest)
+        {
+            NCCALCSIZE_PARAMS* ncCalcSizeParams = (NCCALCSIZE_PARAMS*)(void*)m.LParamInternal;
+
+            if (ncCalcSizeParams is not null)
+            {
+                Padding padding = GetVisualStylesPadding(true);
+
+                ncCalcSizeParams->rgrc._0.top += padding.Top;
+                ncCalcSizeParams->rgrc._0.bottom -= padding.Bottom;
+                ncCalcSizeParams->rgrc._0.left += padding.Left;
+                ncCalcSizeParams->rgrc._0.right -= padding.Right;
+
+                m.ResultInternal = (LRESULT)0;
+                return;
+            }
+        }
+
+        base.WndProc(ref m);
+    }
+
     private void WmReflectCommand(ref Message m)
     {
         if (!_textBoxFlags[s_codeUpdateText] && !_textBoxFlags[s_creatingHandle])
         {
-            uint hiword = m.WParamInternal.HIWORD;
-            if (hiword == PInvoke.EN_CHANGE && CanRaiseTextChangedEvent)
+            uint hiWord = m.WParamInternal.HIWORD;
+            if (hiWord == PInvoke.EN_CHANGE && CanRaiseTextChangedEvent)
             {
                 OnTextChanged(EventArgs.Empty);
             }
-            else if (hiword == PInvoke.EN_UPDATE)
+            else if (hiWord == PInvoke.EN_UPDATE)
             {
                 // Force update to the Modified property, which will trigger ModifiedChanged event handlers
                 _ = Modified;
@@ -2081,19 +2466,31 @@ public abstract partial class TextBoxBase : Control
     {
         switch (m.MsgInternal)
         {
+            case PInvoke.WM_NCCALCSIZE:
+                WmNcCalcSize(ref m);
+                break;
+
+            case PInvoke.WM_NCPAINT:
+                WmNcPaint(ref m);
+                break;
+
             case PInvoke.WM_LBUTTONDBLCLK:
                 _doubleClickFired = true;
                 base.WndProc(ref m);
                 break;
+
             case MessageId.WM_REFLECT_COMMAND:
                 WmReflectCommand(ref m);
                 break;
+
             case PInvoke.WM_GETDLGCODE:
                 WmGetDlgCode(ref m);
                 break;
+
             case PInvoke.WM_SETFONT:
                 WmSetFont(ref m);
                 break;
+
             case PInvoke.WM_CONTEXTMENU:
                 if (ShortcutsEnabled)
                 {
@@ -2109,6 +2506,7 @@ public abstract partial class TextBoxBase : Control
                 }
 
                 break;
+
             case PInvoke.WM_DESTROY:
                 if (TryGetAccessibilityObject(out AccessibleObject? @object) && @object is TextBoxBaseAccessibleObject accessibleObject &&
                     !RecreatingHandle)
@@ -2119,6 +2517,7 @@ public abstract partial class TextBoxBase : Control
                 base.WndProc(ref m);
 
                 break;
+
             default:
                 base.WndProc(ref m);
                 break;
