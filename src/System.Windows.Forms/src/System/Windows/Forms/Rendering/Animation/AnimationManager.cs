@@ -13,7 +13,7 @@ internal partial class AnimationManager
 
     private readonly ConcurrentDictionary<AnimatedControlRenderer, AnimationRendererItem> _renderer = [];
 
-    private readonly WindowsFormsSynchronizationContext? _syncContext;
+    private WindowsFormsSynchronizationContext? _syncContext;
     private static AnimationManager? s_instance;
 
     private static AnimationManager Instance
@@ -164,6 +164,11 @@ internal partial class AnimationManager
             }
 
             float progress = 1 - (remainingAnimationMilliseconds / (float)item.AnimationDuration);
+
+            if (_syncContext is not null)
+            {
+                _syncContext = (WindowsFormsSynchronizationContext?)SynchronizationContext.Current;
+            }
 
             _syncContext?.Post(
                 d: _ => item.Renderer.AnimationProc(progress),
