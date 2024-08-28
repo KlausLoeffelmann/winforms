@@ -36,11 +36,11 @@ internal partial class AnimationManager
     ///  <para>
     ///   Note, that there are parts of WPF, which are enabling the smaller timer resolution for animations. (See
     ///   https://aka.ms/Wpf_MediaContext.cs, `EnterInterlockedPresentation()`, ff. Usually WPF tries to stay in the range
-    ///   of the system timer resolution and aims for 60 Hertz; Media intensive WPF applications however change the resolution,
+    ///   of the system timer resolution and aims for 50 Hertz; Media intensive WPF applications however change the resolution,
     ///   and - by own past experiences - appear not to change it back.
     ///  </para>
     /// </remarks>
-    public const int FrameRate = 60;
+    public const int FrameRate = 50;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AnimationManager"/> class.

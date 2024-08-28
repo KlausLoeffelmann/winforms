@@ -44,13 +44,13 @@ public partial class RichTextBox : TextBoxBase
     private const int CHAR_BUFFER_LEN = 512;
 
     // Event objects
-    private static readonly object s_hscrollEvent = new();
+    private static readonly object s_hScrollEvent = new();
     private static readonly object s_linkActivateEvent = new();
     private static readonly object s_imeChangeEvent = new();
     private static readonly object s_protectedEvent = new();
     private static readonly object s_requestSizeEvent = new();
     private static readonly object s_selectionChangeEvent = new();
-    private static readonly object s_vscrollEvent = new();
+    private static readonly object s_vScrollEvent = new();
 
     // Persistent state
     //
@@ -83,8 +83,8 @@ public partial class RichTextBox : TextBoxBase
     private static readonly BitVector32.Section s_autoUrlDetectSection = BitVector32.CreateSection(1, s_showSelBarSection);
     private static readonly BitVector32.Section s_fInCtorSection = BitVector32.CreateSection(1, s_autoUrlDetectSection);
     private static readonly BitVector32.Section s_protectedErrorSection = BitVector32.CreateSection(1, s_fInCtorSection);
-    private static readonly BitVector32.Section s_linkcursorSection = BitVector32.CreateSection(1, s_protectedErrorSection);
-    private static readonly BitVector32.Section s_allowOleDropSection = BitVector32.CreateSection(1, s_linkcursorSection);
+    private static readonly BitVector32.Section s_linkCursorSection = BitVector32.CreateSection(1, s_protectedErrorSection);
+    private static readonly BitVector32.Section s_allowOleDropSection = BitVector32.CreateSection(1, s_linkCursorSection);
     private static readonly BitVector32.Section s_suppressTextChangedEventSection = BitVector32.CreateSection(1, s_allowOleDropSection);
     private static readonly BitVector32.Section s_callOnContentsResizedSection = BitVector32.CreateSection(1, s_suppressTextChangedEventSection);
     private static readonly BitVector32.Section s_richTextShortcutsEnabledSection = BitVector32.CreateSection(1, s_callOnContentsResizedSection);
@@ -479,8 +479,8 @@ public partial class RichTextBox : TextBoxBase
 
     private bool LinkCursor
     {
-        get => _richTextBoxFlags[s_linkcursorSection] != 0;
-        set => _richTextBoxFlags[s_linkcursorSection] = value ? 1 : 0;
+        get => _richTextBoxFlags[s_linkCursorSection] != 0;
+        set => _richTextBoxFlags[s_linkCursorSection] = value ? 1 : 0;
     }
 
     [DefaultValue(int.MaxValue)]
@@ -1320,14 +1320,7 @@ public partial class RichTextBox : TextBoxBase
 
             if (!IsHandleCreated && _textRtf is null)
             {
-                if (_textPlain is not null)
-                {
-                    return _textPlain;
-                }
-                else
-                {
-                    return base.Text;
-                }
+                return _textPlain is not null ? _textPlain : base.Text;
             }
             else
             {
@@ -1457,14 +1450,7 @@ public partial class RichTextBox : TextBoxBase
                 int numerator = 0;
                 int denominator = 0;
                 PInvoke.SendMessage(this, PInvoke.EM_GETZOOM, (WPARAM)(&numerator), ref denominator);
-                if ((numerator != 0) && (denominator != 0))
-                {
-                    _zoomMultiplier = numerator / ((float)denominator);
-                }
-                else
-                {
-                    _zoomMultiplier = 1.0f;
-                }
+                _zoomMultiplier = (numerator != 0) && (denominator != 0) ? numerator / ((float)denominator) : 1.0f;
 
                 return _zoomMultiplier;
             }
@@ -1555,8 +1541,8 @@ public partial class RichTextBox : TextBoxBase
     [SRDescription(nameof(SR.RichTextBoxHScroll))]
     public event EventHandler? HScroll
     {
-        add => Events.AddHandler(s_hscrollEvent, value);
-        remove => Events.RemoveHandler(s_hscrollEvent, value);
+        add => Events.AddHandler(s_hScrollEvent, value);
+        remove => Events.RemoveHandler(s_hScrollEvent, value);
     }
 
     [SRCategory(nameof(SR.CatBehavior))]
@@ -1595,8 +1581,8 @@ public partial class RichTextBox : TextBoxBase
     [SRDescription(nameof(SR.RichTextBoxVScroll))]
     public event EventHandler? VScroll
     {
-        add => Events.AddHandler(s_vscrollEvent, value);
-        remove => Events.RemoveHandler(s_vscrollEvent, value);
+        add => Events.AddHandler(s_vScrollEvent, value);
+        remove => Events.RemoveHandler(s_vScrollEvent, value);
     }
 
     /// <summary>
@@ -1712,8 +1698,8 @@ public partial class RichTextBox : TextBoxBase
                 case INPUT:
                     {
                         // Several customers complained that they were getting Random NullReference exceptions inside EditStreamProc.
-                        // We had a case of a customer using Everett bits and another case of a customer using Whidbey Beta1 bits.
-                        // We don't have a repro in house which makes it problematic to determine the cause for this behavior.
+                        // We had a case of a customer using Everett bits and another case of a customer using Whidbey Beta-1 bits.
+                        // We don't have a repro in-house which makes it problematic to determine the cause for this behavior.
                         // Looking at the code it seems that the only possibility for editStream to be null is when the user
                         // calls RichTextBox::LoadFile(Stream, RichTextBoxStreamType) with a null Stream.
                         // However, the user said that his app is not using LoadFile method.
@@ -1724,6 +1710,7 @@ public partial class RichTextBox : TextBoxBase
                             transferred = _editStream.Read(bytes, 0, cb);
 
                             Marshal.Copy(bytes, 0, buf, transferred);
+
                             // set up number of bytes transferred
                             if (transferred < 0)
                             {
@@ -1803,10 +1790,10 @@ public partial class RichTextBox : TextBoxBase
                 cpMin = position
             };
 
-            // Look for kashidas in the string. A kashida is an Arabic visual justification character
-            // that's not semantically meaningful. Searching for ABC might find AB_C (where A,B, and C
-            // represent Arabic characters and _ represents a kashida). We should highlight the text
-            // including the kashida.
+            // Look for Kashidas in the string. A Kashida is an Arabic visual justification character
+            // (similar to latin-based typography expansions) that's not semantically meaningful. Searching
+            // for ABC might find AB_C (where A,B, and C represent Arabic characters and _ represents a
+            // Kashida). We should highlight the text including the Kashida.
             const char kashida = (char)0x640;
             ReadOnlySpan<char> kashidaString = [kashida];
 
@@ -1815,18 +1802,19 @@ public partial class RichTextBox : TextBoxBase
             int startIndex = FindInternal(kashidaString, position, position + str.Length, options);
             if (startIndex == -1)
             {
-                // No kashida in the string
+                // No Kashida in the string
                 chrg.cpMax = position + str.Length;
             }
             else
             {
-                // There's at least one kashida
+                // There's at least one Kashida
                 int searchingCursor; // index into search string
                 int foundCursor; // index into Text
                 for (searchingCursor = startIndex, foundCursor = position + startIndex; searchingCursor < str.Length;
                     searchingCursor++, foundCursor++)
                 {
-                    while (FindInternal(kashidaString, foundCursor, foundCursor + 1, options) != -1 && str[searchingCursor] != kashida)
+                    while (FindInternal(kashidaString, foundCursor, foundCursor + 1, options) != -1
+                        && str[searchingCursor] != kashida)
                     {
                         foundCursor++;
                     }
@@ -2360,16 +2348,16 @@ public partial class RichTextBox : TextBoxBase
 
         // 1. RecreateHandle is called.
         // 2. In RTB.OnHandleDestroyed, we cache off any RTF that might have been set.
-        //     The RTB has been set to the empty string, so we do get RTF back. The RTF
-        //     contains formatting info, but doesn't contain any reading-order info,
-        //     so RichEdit defaults to LTR reading order.
+        //    The RTB has been set to the empty string, so we do get RTF back. The RTF
+        //    contains formatting info, but doesn't contain any reading-order info,
+        //    so RichEdit defaults to LTR reading order.
         // 3. In RTB.OnHandleCreated, we check if we have any cached RTF, and if so,
-        //     we want to set the RTF to that value. This is to ensure that the original
-        //     text doesn't get lost.
+        //    we want to set the RTF to that value. This is to ensure that the original
+        //    text doesn't get lost.
         // 4. In the RTF setter, we get the current RTF, compare it to the old RTF, and
-        //     since those are not equal, we set the RichEdit content to the old RTF.
+        //    since those are not equal, we set the RichEdit content to the old RTF.
         // 5. But... since the original RTF had no reading-order info, the reading-order
-        //     will default to LTR.
+        //    will default to LTR.
 
         // That's why in Everett we set the text back since that clears the RTF, thus restoring
         // the reading order to that of the window style. The problem here is that when there's
@@ -2534,7 +2522,7 @@ public partial class RichTextBox : TextBoxBase
     /// </summary>
     protected virtual void OnHScroll(EventArgs e)
     {
-        ((EventHandler?)Events[s_hscrollEvent])?.Invoke(this, e);
+        ((EventHandler?)Events[s_hScrollEvent])?.Invoke(this, e);
     }
 
     /// <summary>
@@ -2578,7 +2566,7 @@ public partial class RichTextBox : TextBoxBase
     /// </summary>
     protected virtual void OnVScroll(EventArgs e)
     {
-        ((EventHandler?)Events[s_vscrollEvent])?.Invoke(this, e);
+        ((EventHandler?)Events[s_vScrollEvent])?.Invoke(this, e);
     }
 
     /// <summary>
@@ -2686,14 +2674,7 @@ public partial class RichTextBox : TextBoxBase
             PInvoke.SendMessage(this, PInvoke.EM_SETZOOM, (WPARAM)numerator, (LPARAM)denominator);
         }
 
-        if (numerator != 0)
-        {
-            _zoomMultiplier = numerator / ((float)denominator);
-        }
-        else
-        {
-            _zoomMultiplier = 1.0f;
-        }
+        _zoomMultiplier = numerator != 0 ? numerator / ((float)denominator) : 1.0f;
     }
 
     private unsafe bool SetCharFormat(CFM_MASK mask, CFE_EFFECTS effect, RichTextBoxSelectionAttribute charFormat)
@@ -2775,7 +2756,7 @@ public partial class RichTextBox : TextBoxBase
 
     private static void SetupLogPixels()
     {
-        using var dc = GetDcScope.ScreenDC;
+        using GetDcScope dc = GetDcScope.ScreenDC;
         s_logPixelsX = PInvokeCore.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSX);
         s_logPixelsY = PInvokeCore.GetDeviceCaps(dc, GET_DEVICE_CAPS_INDEX.LOGPIXELSY);
     }
@@ -3096,7 +3077,7 @@ public partial class RichTextBox : TextBoxBase
             AllowOleObjects = true;
 
             _oleCallback = CreateRichEditOleCallback();
-            using var oleCallback = ComHelpers.GetComScope<IRichEditOleCallback>(_oleCallback);
+            using ComScope<IRichEditOleCallback> oleCallback = ComHelpers.GetComScope<IRichEditOleCallback>(_oleCallback);
             PInvoke.SendMessage(this, PInvoke.EM_SETOLECALLBACK, 0, (nint)oleCallback);
         }
 
@@ -3131,7 +3112,7 @@ public partial class RichTextBox : TextBoxBase
     protected virtual object CreateRichEditOleCallback() => new OleCallback(this);
 
     /// <summary>
-    ///  Handles link messages (mouse move, down, up, dblclk, etc)
+    ///  Handles link messages (mouse move, down, up, double-click, etc)
     /// </summary>
     private unsafe void EnLinkMsgHandler(ref Message m)
     {
@@ -3146,10 +3127,13 @@ public partial class RichTextBox : TextBoxBase
                 return;
             // Mouse-down triggers Url; this matches Outlook 2000's behavior.
             case PInvoke.WM_LBUTTONDOWN:
-                string linktext = CharRangeToString(enlink.charrange);
-                if (!string.IsNullOrEmpty(linktext))
+                string linkText = CharRangeToString(enlink.charrange);
+                if (!string.IsNullOrEmpty(linkText))
                 {
-                    OnLinkClicked(new LinkClickedEventArgs(linktext, enlink.charrange.cpMin, enlink.charrange.cpMax - enlink.charrange.cpMin));
+                    OnLinkClicked(new LinkClickedEventArgs(
+                        linkText: linkText,
+                        linkStart: enlink.charrange.cpMin,
+                        linkLength: enlink.charrange.cpMax - enlink.charrange.cpMin));
                 }
 
                 m.ResultInternal = (LRESULT)1;
@@ -3211,6 +3195,35 @@ public partial class RichTextBox : TextBoxBase
             PInvoke.SendMessage(this, PInvoke.EM_EXLIMITTEXT, 0, (IntPtr)MaxLength);
         }
     }
+
+    private unsafe void WmNcCalcSize(ref Message m)
+    {
+        bool wParam = m.WParamInternal != 0;
+
+        NCCALCSIZE_PARAMS* ncCalcSizeParams = (NCCALCSIZE_PARAMS*)(void*)m.LParamInternal;
+
+        if (ncCalcSizeParams is not null)
+        {
+            // GetVisualStyles also calls GetScrollBarPadding, which we override and return
+            // an empty Padding. The reason is that the RichTextBox calculates its non-client size,
+            // including the scrollbars, so we need to take those out of the calculation.
+            Padding padding = GetVisualStylesPadding(true);
+
+            ncCalcSizeParams->rgrc._0.top += padding.Top;
+            ncCalcSizeParams->rgrc._0.bottom -= padding.Bottom;
+            ncCalcSizeParams->rgrc._0.left += padding.Left;
+            ncCalcSizeParams->rgrc._0.right -= padding.Right;
+
+            m.ResultInternal = (LRESULT)0;
+            return;
+        }
+
+        base.WndProc(ref m);
+    }
+
+    // RichTextBox does it's own NC calculation, so we need to leave that alone.
+    // (See also comments in WmNcCalcSize, WndProc and GetScrollBarPadding)
+    private protected override Padding GetScrollBarPadding() => Padding.Empty;
 
     private void WmReflectCommand(ref Message m)
     {
@@ -3434,6 +3447,20 @@ public partial class RichTextBox : TextBoxBase
     {
         switch (m.MsgInternal)
         {
+            case PInvoke.WM_NCCALCSIZE:
+                // We need the RichTextBox to calculate its own Nc-Items, otherwise, the rendering fails.
+                // But then, of course, we need to adjust the padding to account for the border when we have
+                // a scrollbar showing.
+                base.WndProc(ref m);
+
+                if (VisualStylesMode >= VisualStylesMode.Net10)
+                {
+                    // And then we do ours on top of that.
+                    WmNcCalcSize(ref m);
+                }
+
+                break;
+
             case MessageId.WM_REFLECT_NOTIFY:
                 WmReflectNotify(ref m);
                 break;

@@ -24,8 +24,14 @@ public partial class CheckBox : ButtonBase
     private static readonly object s_checkedChangedEvent = new();
     private static readonly object s_checkStateChangedEvent = new();
     private static readonly object s_appearanceChangedEvent = new();
-    private const ContentAlignment AnyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
 
+    private const ContentAlignment AnyRight = ContentAlignment.TopRight
+        | ContentAlignment.MiddleRight
+        | ContentAlignment.BottomRight;
+
+    private const int ScaleBasedToggleSwitchWidth = 50;
+    private const int ScaleBasedToggleSwitchHeight = 25;
+    private const int ScaleBasedToggleSwitchFixedHorizontalOuterPadding = 10;
     private ContentAlignment _checkAlign = ContentAlignment.MiddleLeft;
     private CheckState _checkState;
     private Appearance _appearance;
@@ -251,6 +257,7 @@ public partial class CheckBox : ButtonBase
         {
             CreateParams cp = base.CreateParams;
             cp.ClassName = PInvoke.WC_BUTTON;
+
             if (OwnerDraw)
             {
                 cp.Style |= PInvoke.BS_OWNERDRAW;
@@ -276,6 +283,7 @@ public partial class CheckBox : ButtonBase
 
                 // Determine the alignment of the check box
                 ContentAlignment align = RtlTranslateContent(CheckAlign);
+
                 if ((align & AnyRight) != 0)
                 {
                     cp.Style |= PInvoke.BS_RIGHTBUTTON;
@@ -298,7 +306,7 @@ public partial class CheckBox : ButtonBase
 
     private void ScaleConstants()
     {
-        const int LogicalFlatSystemStylePaddingWidth = 25;
+        const int LogicalFlatSystemStylePaddingWidth = ScaleBasedToggleSwitchHeight;
         const int LogicalFlatSystemStyleMinimumHeight = 13;
 
         _flatSystemStylePaddingWidth = LogicalToDeviceUnits(LogicalFlatSystemStylePaddingWidth);
@@ -324,10 +332,13 @@ public partial class CheckBox : ButtonBase
                 int dpiScale = (int)(DeviceDpi / 96f);
 
                 textSize = TextRenderer.MeasureText(Text, Font);
-                int switchWidth = 50 * dpiScale;
-                int switchHeight = 25 * dpiScale;
+                int switchWidth = ScaleBasedToggleSwitchWidth * dpiScale;
+                int switchHeight = ScaleBasedToggleSwitchHeight * dpiScale;
 
-                int totalWidth = textSize.Width + switchWidth + 20 * dpiScale; // 10 dpi padding on each side
+                int totalWidth = textSize.Width
+                    + switchWidth
+                    + ScaleBasedToggleSwitchFixedHorizontalOuterPadding * dpiScale; // padding on each side
+
                 int totalHeight = Math.Max(textSize.Height, switchHeight);
 
                 return new Size(totalWidth, totalHeight);
