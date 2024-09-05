@@ -8,6 +8,7 @@ using System.Drawing.Design;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms.Analyzers.Diagnostics;
 using System.Windows.Forms.Layout;
 using Windows.Win32.System.Variant;
 using Windows.Win32.UI.Accessibility;
@@ -46,6 +47,7 @@ public abstract partial class TextBoxBase : Control
     private static readonly object s_modifiedChangedEvent = new();
     private static readonly object s_multilineChangedEvent = new();
     private static readonly object s_readOnlyChangedEvent = new();
+    private static readonly object s_nonClientPaintEvent = new();
 
     private const int VisualStylesFixed3DBorderPadding = 5;
     private const int VisualStylesFixedSingleBorderPadding = 4;
@@ -282,21 +284,12 @@ public abstract partial class TextBoxBase : Control
     [SRDescription(nameof(SR.ControlBackColorDescr))]
     public override Color BackColor
     {
-        get
-        {
-            if (ShouldSerializeBackColor())
-            {
-                return base.BackColor;
-            }
-            else if (ReadOnly)
-            {
-                return SystemColors.Control;
-            }
-            else
-            {
-                return SystemColors.Window;
-            }
-        }
+        get => ShouldSerializeBackColor()
+                ? base.BackColor
+                : ReadOnly
+                    ? SystemColors.Control
+                    : SystemColors.Window;
+
         set => base.BackColor = value;
     }
 
@@ -507,17 +500,10 @@ public abstract partial class TextBoxBase : Control
     [SRDescription(nameof(SR.ControlForeColorDescr))]
     public override Color ForeColor
     {
-        get
-        {
-            if (ShouldSerializeForeColor())
-            {
-                return base.ForeColor;
-            }
-            else
-            {
-                return SystemColors.WindowText;
-            }
-        }
+        get => ShouldSerializeForeColor()
+                ? base.ForeColor
+                : SystemColors.WindowText;
+
         set => base.ForeColor = value;
     }
 
@@ -623,14 +609,9 @@ public abstract partial class TextBoxBase : Control
         set
         {
             // un-parse this string list...
-            if (value is not null && value.Length > 0)
-            {
-                Text = string.Join(Environment.NewLine, value);
-            }
-            else
-            {
-                Text = string.Empty;
-            }
+            Text = value is not null && value.Length > 0
+                ? string.Join(Environment.NewLine, value)
+                : string.Empty;
         }
     }
 
@@ -758,6 +739,44 @@ public abstract partial class TextBoxBase : Control
     {
         add => Events.AddHandler(s_multilineChangedEvent, value);
         remove => Events.RemoveHandler(s_multilineChangedEvent, value);
+    }
+
+    /// <summary>
+    ///  Occurs when the non-client area of the control needs to be painted.
+    /// </summary>
+    /// <remarks>
+    ///  <para>
+    ///   The <see cref="NonClientPaint"/> event is raised when the non-client area of the control,
+    ///   which includes the border and title bar, needs to be painted. This event allows you to customize
+    ///   the appearance of the non-client area.
+    ///  </para>
+    ///  <para>
+    ///   The non-client area of a control is the area surrounding the client area, which includes the border,
+    ///   or other elements that are not part of the content of the control. When the non-client
+    ///   area needs to be painted, the <see cref="NonClientPaint"/> event is raised.
+    ///  </para>
+    ///  <para>
+    ///   The event handler for the <see cref="NonClientPaint"/> event should perform the custom painting
+    ///   of the non-client area. This can include drawing additional other visual elements, which are located
+    ///   between the borders and the client area, which can be controlled by adding more padding to get more
+    ///   non-client real estate. The event provides a <see cref="PaintEventArgs"/> object that contains the
+    ///   graphics context for the non-client area.
+    ///  </para>
+    ///  <para>
+    ///   Note that the non-client area is typically handled by the operating system By handling the
+    ///   <see cref="NonClientPaint"/> event, you can override the default behavior and provide a custom
+    ///   appearance for the non-client area in this case, also note, that the passed graphics object already
+    ///   has the clipping region set to avoid painting over the client area and will paint potential borders
+    ///   _after_ the event has been raised, if the respective properties are set.
+    ///  </para>
+    /// </remarks>
+    [SRCategory(nameof(SR.CatPropertyChanged))]
+    [SRDescription(nameof(SR.TextBoxBaseOnMultilineChangedDescr))]
+    [Experimental(DiagnosticIDs.ExperimentalVisualStyles, UrlFormat = DiagnosticIDs.UrlFormat)]
+    public event PaintEventHandler? NonClientPaint
+    {
+        add => Events.AddHandler(s_nonClientPaintEvent, value);
+        remove => Events.RemoveHandler(s_nonClientPaintEvent, value);
     }
 
     [Browsable(false)]
@@ -1016,14 +1035,7 @@ public abstract partial class TextBoxBase : Control
 
             end = start + length - 1;
 
-            if (t is null)
-            {
-                len = 0;
-            }
-            else
-            {
-                len = t.Length;
-            }
+            len = t is null ? 0 : t.Length;
 
             Debug.Assert(end <= len,
                 $"SelectionEnd is outside the set of valid caret positions for the current " +
@@ -1694,8 +1706,15 @@ public abstract partial class TextBoxBase : Control
         if (IsAccessibilityObjectCreated)
         {
             AccessibilityObject.RaiseAutomationEvent(UIA_EVENT_ID.UIA_Text_TextChangedEventId);
-            using var textVariant = PasswordProtect ? (VARIANT)string.Empty : (VARIANT)Text;
-            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UIA_PROPERTY_ID.UIA_ValueValuePropertyId, textVariant, textVariant);
+
+            using VARIANT textVariant = PasswordProtect
+                ? (VARIANT)string.Empty
+                : (VARIANT)Text;
+
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(
+                UIA_PROPERTY_ID.UIA_ValueValuePropertyId,
+                textVariant,
+                textVariant);
         }
     }
 
@@ -1805,7 +1824,7 @@ public abstract partial class TextBoxBase : Control
             return;
         }
 
-        using var textDocument = richEdit.TryQuery<ITextDocument>(out HRESULT hr);
+        using ComScope<ITextDocument> textDocument = richEdit.TryQuery<ITextDocument>(out HRESULT hr);
 
         if (hr.Succeeded)
         {
@@ -1869,14 +1888,10 @@ public abstract partial class TextBoxBase : Control
             // We shouldn't allow positive length if you're starting at the end, but
             // should allow negative length.
             long longLength = Math.Min(0, (long)length + start - textLen);
-            if (longLength < int.MinValue)
-            {
-                length = int.MinValue;
-            }
-            else
-            {
-                length = (int)longLength;
-            }
+
+            length = longLength < int.MinValue
+                ? int.MinValue
+                : (int)longLength;
 
             start = textLen;
         }
@@ -1964,16 +1979,7 @@ public abstract partial class TextBoxBase : Control
         }
         else
         {
-            int textLength;
-
-            if (textLen >= 0)
-            {
-                textLength = textLen;
-            }
-            else
-            {
-                textLength = TextLength;
-            }
+            int textLength = textLen >= 0 ? textLen : TextLength;
 
             if (start > textLength)
             {
@@ -2176,7 +2182,7 @@ public abstract partial class TextBoxBase : Control
         try
         {
             base.WndProc(ref m);
-            OnNcPaint(graphics);
+            OnNcPaintInternal(graphics);
         }
         finally
         {
@@ -2186,7 +2192,7 @@ public abstract partial class TextBoxBase : Control
         }
     }
 
-    private protected virtual void OnNcPaint(Graphics graphics)
+    private protected virtual void OnNcPaintInternal(Graphics graphics)
     {
         const int cornerRadius = 15;
 
@@ -2254,6 +2260,10 @@ public abstract partial class TextBoxBase : Control
                     clientBackgroundBrush,
                     deflatedBounds);
 
+#pragma warning disable WFO5000
+                OnNonClientPaint(new PaintEventArgs(offscreenGraphics, deflatedBounds));
+#pragma warning restore WFO5000
+
                 break;
 
             case BorderStyle.FixedSingle:
@@ -2262,6 +2272,10 @@ public abstract partial class TextBoxBase : Control
                 offscreenGraphics.FillRectangle(
                     clientBackgroundBrush,
                     deflatedBounds);
+
+#pragma warning disable WFO5000
+                OnNonClientPaint(new PaintEventArgs(offscreenGraphics, deflatedBounds));
+#pragma warning restore WFO5000
 
                 // Draw a Rectangle with the border thickness
                 offscreenGraphics.DrawRectangle(
@@ -2277,6 +2291,10 @@ public abstract partial class TextBoxBase : Control
                     clientBackgroundBrush,
                     deflatedBounds,
                     new Size(cornerRadius, cornerRadius));
+
+#pragma warning disable WFO5000
+                OnNonClientPaint(new PaintEventArgs(offscreenGraphics, deflatedBounds));
+#pragma warning restore WFO5000
 
                 // Draw a rounded Rectangle with the border thickness
                 offscreenGraphics.DrawRoundedRectangle(
@@ -2330,6 +2348,19 @@ public abstract partial class TextBoxBase : Control
             offscreenGraphics.DrawLine(focusPen, x1, y1, x2, y2);
             offscreenGraphics.DrawLine(focusPen, x1 - 2, y1 - 1, x2 + 2, y2 - 1);
             offscreenGraphics.DrawLine(focusPen, x1 - 3, y1 - 2, x2 + 3, y2 - 2);
+        }
+    }
+
+    /// <summary>
+    ///  Raises the <see cref="NonClientPaint"/> event.
+    /// </summary>
+    /// <param name="paintEventArgs">A <see cref="PaintEventArgs"/> that contains the event data.</param>
+    [Experimental(DiagnosticIDs.ExperimentalVisualStyles, UrlFormat = DiagnosticIDs.UrlFormat)]
+    protected virtual void OnNonClientPaint(PaintEventArgs paintEventArgs)
+    {
+        if (Events[s_nonClientPaintEvent] is PaintEventHandler eh)
+        {
+            eh(this, paintEventArgs);
         }
     }
 

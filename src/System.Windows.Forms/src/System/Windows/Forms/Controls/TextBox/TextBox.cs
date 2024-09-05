@@ -824,7 +824,8 @@ public partial class TextBox : TextBoxBase
         {
             using Graphics g = Graphics.FromHdc((HDC)m.WParamInternal);
             Rectangle rect = new(0, 0, Size.Width - 1, Size.Height - 1);
-            using var pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
+
+            using RefCountedCache<Pen, Color, Color>.Scope pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
             g.DrawRectangle(pen, rect);
             rect.Inflate(-1, -1);
             g.DrawRectangle(SystemPens.Window, rect);

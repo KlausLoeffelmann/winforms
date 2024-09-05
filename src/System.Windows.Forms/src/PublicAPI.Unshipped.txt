@@ -6,6 +6,7 @@ System.Windows.Forms.Control.VisualStylesMode.get -> System.Windows.Forms.Visual
 System.Windows.Forms.Control.VisualStylesMode.set -> void
 System.Windows.Forms.Control.VisualStylesModeChanged -> System.EventHandler?
 System.Windows.Forms.DataGridViewCellStyle.Font.get -> System.Drawing.Font?
+System.Windows.Forms.TextBoxBase.NonClientPaint -> System.Windows.Forms.PaintEventHandler?
 System.Windows.Forms.VisualStylesMode
 System.Windows.Forms.VisualStylesMode.Classic = 0 -> System.Windows.Forms.VisualStylesMode
 System.Windows.Forms.VisualStylesMode.Disabled = 1 -> System.Windows.Forms.VisualStylesMode
