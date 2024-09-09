@@ -485,7 +485,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
             Control[] controls = [.. _tools.Keys];
             for (int i = 0; i < controls.Length; i++)
             {
-                var control = controls[i];
+                Control? control = controls[i];
                 currentTopLevel = control.TopLevelControlInternal;
                 if (currentTopLevel is not null)
                 {
@@ -954,15 +954,10 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
     /// <summary>
     ///  Returns the delay time based on the NativeMethods.TTDT_* values.
     /// </summary>
-    internal int GetDelayTime(uint type)
-    {
-        if (!GetHandleCreated())
-        {
-            return _delayTimes[(int)type];
-        }
-
-        return (int)PInvoke.SendMessage(this, PInvoke.TTM_GETDELAYTIME, (WPARAM)type);
-    }
+    internal int GetDelayTime(uint type) =>
+        !GetHandleCreated()
+            ? _delayTimes[(int)type]
+            : (int)PInvoke.SendMessage(this, PInvoke.TTM_GETDELAYTIME, (WPARAM)type);
 
     internal bool GetHandleCreated() => _window is not null && _window.Handle != IntPtr.Zero;
 
@@ -1009,17 +1004,12 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
     [Localizable(true)]
     [SRDescription(nameof(SR.ToolTipToolTipDescr))]
     [Editor($"System.ComponentModel.Design.MultilineStringEditor, {AssemblyRef.SystemDesign}", typeof(Drawing.Design.UITypeEditor))]
-    public string? GetToolTip(Control? control)
-    {
-        if (control is null)
-        {
-            return string.Empty;
-        }
-
-        return _tools.TryGetValue(control, out TipInfo? tipInfo)
-            ? tipInfo.Caption
-            : string.Empty;
-    }
+    public string? GetToolTip(Control? control) =>
+        control is null
+            ? string.Empty
+            : _tools.TryGetValue(control, out TipInfo? tipInfo)
+                ? tipInfo.Caption
+                : string.Empty;
 
     /// <summary>
     ///  Returns the HWND of the window that is at the specified point. This handles special
@@ -1308,7 +1298,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
 
         if (window is Control associatedControl)
         {
-            PInvoke.GetWindowRect(associatedControl, out var rect);
+            PInvoke.GetWindowRect(associatedControl, out RECT rect);
 
             _ = Cursor.Current;
             Point cursorLocation = Cursor.Position;
@@ -1406,7 +1396,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         if (IsWindowActive(window))
         {
             // Set the ToolTips.
-            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out var r);
+            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out RECT r);
             int pointX = r.left + point.X;
             int pointY = r.top + point.Y;
 
@@ -1426,7 +1416,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         if (IsWindowActive(window))
         {
             // Set the ToolTips.
-            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out var r);
+            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out RECT r);
             int pointX = r.left + point.X;
             int pointY = r.top + point.Y;
             SetTrackPosition(pointX, pointY);
@@ -1444,7 +1434,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
 
         if (IsWindowActive(window))
         {
-            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out var r);
+            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out RECT r);
             int pointX = r.left + x;
             int pointY = r.top + y;
             SetTrackPosition(pointX, pointY);
@@ -1462,7 +1452,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
 
         if (IsWindowActive(window))
         {
-            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out var r);
+            PInvoke.GetWindowRect(Control.GetSafeHandle(window), out RECT r);
             int pointX = r.left + x;
             int pointY = r.top + y;
             SetTrackPosition(pointX, pointY);
@@ -1481,7 +1471,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         // At first, place the tooltip at the middle of the tool (default location).
         int pointX = (toolRectangle.Left + toolRectangle.Right) / 2;
         int pointY = (toolRectangle.Top + toolRectangle.Bottom) / 2;
-        var ownerWindow = tool.GetOwnerWindow();
+        IWin32Window? ownerWindow = tool.GetOwnerWindow();
         if (ownerWindow is null)
         {
             return;
@@ -1845,7 +1835,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
                 _owners[windowAsControl.HWND] = windowAsControl;
             }
 
-            var toolInfo = GetWinTOOLINFO(window);
+            ToolInfoWrapper<HandleRef<HWND>> toolInfo = GetWinTOOLINFO(window);
             toolInfo.Info.uFlags |= TOOLTIP_FLAGS.TTF_TRACK;
 
             if (type is TipInfo.Type.Absolute or TipInfo.Type.SemiAbsolute)
@@ -1954,12 +1944,10 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
     private HWND GetCurrentToolHwnd()
     {
         ToolInfoWrapper<Control> toolInfo = default;
-        if (toolInfo.SendMessage(this, PInvoke.TTM_GETCURRENTTOOLW) != 0)
-        {
-            return toolInfo.Info.hwnd;
-        }
 
-        return default;
+        return toolInfo.SendMessage(this, PInvoke.TTM_GETCURRENTTOOLW) != 0
+            ? toolInfo.Info.hwnd
+            : default;
     }
 
     private Control? GetCurrentToolWindow()
@@ -1981,7 +1969,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
 
         // Reposition the tooltip when its about to be shown since the tooltip can go out of screen
         // working area bounds Reposition would check the bounds for us.
-        PInvoke.GetWindowRect(this, out var rectangle);
+        PInvoke.GetWindowRect(this, out RECT rectangle);
         if (tipInfo.Position != Point.Empty)
         {
             Reposition(tipInfo.Position, rectangle.Size);
@@ -1999,7 +1987,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
             return;
         }
 
-        PInvoke.GetWindowRect(Control.GetSafeHandle(window), out var r);
+        PInvoke.GetWindowRect(Control.GetSafeHandle(window), out RECT r);
         Point cursorLocation = Cursor.Position;
 
         // Do not activate the mouse if its within the bounds of the
@@ -2033,7 +2021,7 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         }
 
         // Get the bounds.
-        PInvoke.GetWindowRect(this, out var rect);
+        PInvoke.GetWindowRect(this, out RECT rect);
 
         Control? toolControl = window as Control;
 
@@ -2060,10 +2048,13 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         // during the popup event; in which case the size of the tooltip is
         // affected. e.ToolTipSize is respected over rect.Size
         PInvoke.GetWindowRect(this, out rect);
-        currentTooltipSize = (e.ToolTipSize == currentTooltipSize) ? rect.Size : e.ToolTipSize;
+        bool isCustomSized = e.ToolTipSize != rect.Size;
+        currentTooltipSize = isCustomSized ? e.ToolTipSize : rect.Size;
 
-        if (IsBalloon)
+        if (isCustomSized)
         {
+            rect = GetIdealBounds(toolControl, Cursor.Position, currentTooltipSize);
+
             // Get the text display rectangle
             PInvoke.SendMessage(this, PInvoke.TTM_ADJUSTRECT, (WPARAM)(BOOL)true, ref rect);
             if (rect.Height > currentTooltipSize.Height)
@@ -2108,6 +2099,50 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
                 currentTooltipSize.Height,
                 SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
         }
+    }
+
+    private static RECT GetIdealBounds(Control? toolControl, Point suggestedPosition, Size currentTooltipSize)
+    {
+        // Determine the screen containing the position
+        var screen = Screen.FromPoint(suggestedPosition);
+        Rectangle workingArea = screen.WorkingArea;
+
+        // Initialize the tooltip bounds at the provided position
+        var tooltipBounds = new Rectangle(suggestedPosition, currentTooltipSize);
+
+        // Check for AutoSize Label or non-multiline TextBox
+        if ((toolControl is Label label && label.AutoSize) ||
+            (toolControl is TextBox textBox && !textBox.Multiline))
+        {
+            // Get control bounds
+            Rectangle controlBounds = toolControl.Bounds;
+
+            // Check for overlap with the control and offset the tooltip if necessary
+            if (tooltipBounds.IntersectsWith(controlBounds))
+            {
+                // Attempt to position the tooltip below or above the control
+                var belowPosition = new Point(controlBounds.Left, controlBounds.Bottom + 5);
+                var abovePosition = new Point(controlBounds.Left, controlBounds.Top - currentTooltipSize.Height - 5);
+
+                // Check if below position is within screen bounds
+                if (belowPosition.Y + currentTooltipSize.Height <= workingArea.Bottom)
+                {
+                    tooltipBounds.Location = belowPosition;
+                }
+
+                // Check if above position is within screen bounds
+                else if (abovePosition.Y >= workingArea.Top)
+                {
+                    tooltipBounds.Location = abovePosition;
+                }
+            }
+        }
+
+        // Ensure tooltip bounds are within the working area of the screen
+        tooltipBounds.X = Math.Max(workingArea.Left, Math.Min(tooltipBounds.X, workingArea.Right - tooltipBounds.Width));
+        tooltipBounds.Y = Math.Max(workingArea.Top, Math.Min(tooltipBounds.Y, workingArea.Bottom - tooltipBounds.Height));
+
+        return new RECT(tooltipBounds.Left, tooltipBounds.Top, tooltipBounds.Right, tooltipBounds.Bottom);
     }
 
     /// <summary>
@@ -2179,14 +2214,10 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
             {
                 wp->x = cursorPos.X;
                 wp->y = cursorPos.Y;
-                if (wp->y + wp->cy + currentCursor.Size.Height - currentCursor.HotSpot.Y > screen.WorkingArea.Bottom)
-                {
-                    wp->y = cursorPos.Y - wp->cy;
-                }
-                else
-                {
-                    wp->y = cursorPos.Y + currentCursor.Size.Height - currentCursor.HotSpot.Y;
-                }
+
+                wp->y = wp->y + wp->cy + currentCursor.Size.Height - currentCursor.HotSpot.Y > screen.WorkingArea.Bottom
+                    ? cursorPos.Y - wp->cy
+                    : cursorPos.Y + currentCursor.Size.Height - currentCursor.HotSpot.Y;
             }
 
             if (wp->x + wp->cx > screen.WorkingArea.Right)
