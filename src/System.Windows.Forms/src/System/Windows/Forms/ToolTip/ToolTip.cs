@@ -1932,13 +1932,14 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         }
 
         PInvoke.SetWindowPos(
-            this,
-            HWND.HWND_TOPMOST,
+            HWND,
+            HWND.Null,
             moveToLocation.X,
             moveToLocation.Y,
             tipSize.Width,
             tipSize.Height,
-            SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
+            SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE
+            | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
     }
 
     private HWND GetCurrentToolHwnd()
@@ -2080,24 +2081,29 @@ public partial class ToolTip : Component, IExtenderProvider, IHandle<HWND>
         {
             _cancelled = true;
             PInvoke.SetWindowPos(
-                this,
-                HWND.HWND_TOPMOST,
+                HWND,
+                HWND.Null,
                 0, 0, 0, 0,
-                SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
+                SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE
+                | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
         }
         else
         {
             _cancelled = false;
 
-            // Only width/height changes are respected, so set top,left to what we got earlier
-            PInvoke.SetWindowPos(
-                this,
-                HWND.HWND_TOPMOST,
-                rect.left,
-                rect.top,
-                currentTooltipSize.Width,
-                currentTooltipSize.Height,
-                SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
+            // SIZE has been set by TTM_SETMAXTIPWIDTH, but we need
+            // to adjust the position, since the location is still related
+            // to the original size.
+            object value = PInvoke.SetWindowPos(
+                hWnd: HWND,
+                hWndInsertAfter: HWND.Null,
+                X: rect.left,
+                Y: rect.top,
+                cx: currentTooltipSize.Width,
+                cy: currentTooltipSize.Height,
+                uFlags: SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE
+                | SET_WINDOW_POS_FLAGS.SWP_NOREPOSITION
+                | SET_WINDOW_POS_FLAGS.SWP_NOOWNERZORDER);
         }
     }
 
