@@ -7453,13 +7453,11 @@ public unsafe partial class Control :
             eventHandler(this, e);
         }
 
-        ControlCollection? controlsCollection = (ControlCollection?)Properties.GetObject(s_controlsCollectionProperty);
-
-        if (controlsCollection is not null)
+        if (Controls is not null)
         {
-            for (int i = 0; i < controlsCollection.Count; i++)
+            for (int i = 0; i < Controls.Count; i++)
             {
-                controlsCollection[i].OnParentVisualStylesModeChanged(e);
+                Controls[i].OnParentVisualStylesModeChanged(e);
             }
         }
     }
