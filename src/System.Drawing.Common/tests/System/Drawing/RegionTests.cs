@@ -169,7 +169,7 @@ public class RegionTests
 
         using Region region = new(graphicsPath);
         using Matrix matrix = new();
-        Assert.Equal(
+        Assert.Equal((RectangleF[])
         [
                     new(1, 2, 3, 3),
                     new(1, 5, 9, 1),
@@ -205,15 +205,15 @@ public class RegionTests
         yield return new object[] { path3, false };
 
         GraphicsPath path4 = new();
-        path4.AddCurve(new Point[] { new(-4194304, -4194304), new(4194304, 4194304) });
+        path4.AddCurve([new(-4194304, -4194304), new(4194304, 4194304)]);
         yield return new object[] { path4, false };
 
         GraphicsPath path5 = new();
-        path5.AddPolygon(new Point[] { new(-4194304, -4194304), new(-4194304, 4194304), new(4194304, 4194304), new(4194304, -4194304) });
+        path5.AddPolygon([new(-4194304, -4194304), new(-4194304, 4194304), new(4194304, 4194304), new(4194304, -4194304)]);
         yield return new object[] { path5, true };
 
         GraphicsPath path6 = new();
-        path6.AddPolygon(new Point[] { new(-4194304, -4194304), new(-4194304, 4194304), new(4194304, 4194304), new(4194304, -4194304), new(-4194304, -4194304) });
+        path6.AddPolygon([new(-4194304, -4194304), new(-4194304, 4194304), new(4194304, 4194304), new(4194304, -4194304), new(-4194304, -4194304)]);
         yield return new object[] { path6, true };
     }
 
@@ -232,7 +232,7 @@ public class RegionTests
     public void Ctor_GraphicsPathTooLarge_SetsToEmpty()
     {
         using GraphicsPath path = new();
-        path.AddCurve(new Point[] { new(-4194304, -4194304), new(4194304, 4194304) });
+        path.AddCurve([new(-4194304, -4194304), new(4194304, 4194304)]);
 
         using Region region = new(path);
         using Matrix matrix = new();
@@ -358,7 +358,7 @@ public class RegionTests
         other.Union(new Rectangle(60, 60, 30, 10));
 
         region.Complement(other);
-        Assert.Equal(
+        Assert.Equal((RectangleF[])
         [
                 new(60, 60, 30, 10),
                 new(20, 80, 20, 10)
@@ -375,7 +375,7 @@ public class RegionTests
 
         Assert.False(region.IsEmpty(s_graphic));
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal(
+        Assert.Equal((RectangleF[])
         [
                 new(5, -5, 2, 10),
                 new(-5, 5, 12, 2)
@@ -390,7 +390,7 @@ public class RegionTests
         using Region other = new();
         region.Complement(other);
 
-        Assert.Equal(
+        Assert.Equal((RectangleF[])
         [
                 new(-4194304, -4194304, 8388608, 4194306),
                 new(-4194304, 2, 4194305, 4),
@@ -486,7 +486,7 @@ public class RegionTests
         graphics.FillRegion(Brushes.Blue, region1);
         graphics.DrawRectangles(Pens.Yellow, region1.GetRegionScans(matrix));
 
-        Assert.Equal(
+        Assert.Equal((RectangleF[])
         [
                 new(80, 40, 30, 70),
                 new(50, 110, 60, 10)
@@ -793,7 +793,7 @@ public class RegionTests
         using Matrix matrix = new();
         union.Union(new RectangleF(60, 60, 30, 10));
         region.Exclude(union);
-        Assert.Equal([new(20, 20, 20, 20)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(20, 20, 20, 20)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -803,7 +803,7 @@ public class RegionTests
         using Region other = new();
         using Matrix matrix = new();
         region.Exclude(other);
-        Assert.Equal([], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1012,8 +1012,8 @@ public class RegionTests
         matrix.Translate(10, 11);
         matrix.Scale(5, 6);
 
-        Assert.Equal([new(1, 2, 3, 4)], region.GetRegionScans(emptyMatrix));
-        Assert.Equal([new(15, 23, 15, 24)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(1, 2, 3, 4)], region.GetRegionScans(emptyMatrix));
+        Assert.Equal((RectangleF[])[new(15, 23, 15, 24)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1136,7 +1136,7 @@ public class RegionTests
         using Region infiniteRegion = new();
         region.Intersect(infiniteRegion);
 
-        Assert.Equal([new Rectangle(1, 2, 3, 4)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new Rectangle(1, 2, 3, 4)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1184,7 +1184,7 @@ public class RegionTests
 
         Assert.False(region.IsEmpty(s_graphic));
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal([new(-5, -5, 10, 10)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(-5, -5, 10, 10)], region.GetRegionScans(matrix));
     }
 
     [Theory]
@@ -1212,7 +1212,7 @@ public class RegionTests
 
         Assert.False(region.IsEmpty(s_graphic));
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal([new(-5, -5, 10, 10)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(-5, -5, 10, 10)], region.GetRegionScans(matrix));
     }
 
     [Theory]
@@ -1698,7 +1698,7 @@ public class RegionTests
         using Matrix matrix = new();
         region.Union(other);
 
-        Assert.Equal([new Rectangle(-4194304, -4194304, 8388608, 8388608)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new Rectangle(-4194304, -4194304, 8388608, 8388608)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1807,7 +1807,7 @@ public class RegionTests
         using Region region = new(new RectangleF(1, 2, 3, 4));
         using Matrix matrix = new();
         region.Transform(matrix);
-        Assert.Equal([new(1, 2, 3, 4)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(1, 2, 3, 4)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1820,7 +1820,7 @@ public class RegionTests
         matrix.Scale(5, 6);
 
         region.Transform(matrix);
-        Assert.Equal([new(15, 23, 15, 24)], region.GetRegionScans(emptyMatrix));
+        Assert.Equal((RectangleF[])[new(15, 23, 15, 24)], region.GetRegionScans(emptyMatrix));
     }
 
     [Theory]
@@ -1839,7 +1839,7 @@ public class RegionTests
 
         region.Transform(matrix);
         Assert.True(region.IsInfinite(s_graphic));
-        Assert.Equal([new(-4194304, -4194304, 8388608, 8388608)], region.GetRegionScans(emptyMatrix));
+        Assert.Equal((RectangleF[])[new(-4194304, -4194304, 8388608, 8388608)], region.GetRegionScans(emptyMatrix));
     }
 
     [Fact]
@@ -1853,7 +1853,7 @@ public class RegionTests
         region.Intersect(new Rectangle(-10, -10, 20, 20));
         region.Transform(matrix);
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal([new(-20, -5, 40, 10)], region.GetRegionScans(emptyMatrix));
+        Assert.Equal((RectangleF[])[new(-20, -5, 40, 10)], region.GetRegionScans(emptyMatrix));
     }
 
     [Fact]
@@ -1866,7 +1866,7 @@ public class RegionTests
         region.Transform(matrix);
 
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal([new(-10, 5, 40, 10)], region.GetRegionScans(emptyMatrix));
+        Assert.Equal((RectangleF[])[new(-10, 5, 40, 10)], region.GetRegionScans(emptyMatrix));
     }
 
     [Fact]
@@ -1892,7 +1892,7 @@ public class RegionTests
         using Region region = new(new RectangleF(1, 2, 3, 4));
         using Matrix matrix = new();
         region.Translate(dx, dy);
-        Assert.Equal([new(1 + dx, 2 + dy, 3, 4)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(1 + dx, 2 + dy, 3, 4)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1904,7 +1904,7 @@ public class RegionTests
         region.Translate(10, 10);
 
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal([new(0, 0, 20, 20)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(0, 0, 20, 20)], region.GetRegionScans(matrix));
     }
 
     [Theory]
@@ -1915,7 +1915,7 @@ public class RegionTests
         using Region region = new(new RectangleF(1, 2, 3, 4));
         using Matrix matrix = new();
         region.Translate(dx, dy);
-        Assert.Equal([new(1 + dx, 2 + dy, 3, 4)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(1 + dx, 2 + dy, 3, 4)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1927,7 +1927,7 @@ public class RegionTests
         region.Translate(10f, 10f);
 
         Assert.False(region.IsInfinite(s_graphic));
-        Assert.Equal([new(0, 0, 20, 20)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(0, 0, 20, 20)], region.GetRegionScans(matrix));
     }
 
     [Fact]
@@ -1939,7 +1939,7 @@ public class RegionTests
         region.Translate(10f, 10f);
 
         Assert.True(region.IsInfinite(s_graphic));
-        Assert.Equal([new(-4194304, -4194304, 8388608, 8388608)], region.GetRegionScans(matrix));
+        Assert.Equal((RectangleF[])[new(-4194304, -4194304, 8388608, 8388608)], region.GetRegionScans(matrix));
     }
 
     [Theory]
@@ -2050,7 +2050,7 @@ public class RegionTests
         using Matrix matrix = new();
         region.Xor(other);
 
-        Assert.Equal(
+        Assert.Equal((RectangleF[])
         [
                 new(-4194304, -4194304, 8388608, 4194306),
                 new(-4194304, 2, 4194305, 4),

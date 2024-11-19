@@ -22,7 +22,7 @@ public class LinearGradientBrushTests
     public void Ctor_PointF_PointF_Color_Color(Point point1, Point point2, Color color1, Color color2, RectangleF expectedRectangle)
     {
         using LinearGradientBrush brush = new((PointF)point1, point2, color1, color2);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -49,7 +49,7 @@ public class LinearGradientBrushTests
     public void Ctor_Point_Point_Color_Color(Point point1, Point point2, Color color1, Color color2, RectangleF expectedRectangle)
     {
         using LinearGradientBrush brush = new(point1, point2, color1, color2);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -83,7 +83,7 @@ public class LinearGradientBrushTests
     public void Ctor_Rectangle_Color_Color_LinearGradientMode(Rectangle rectangle, Color color1, Color color2, LinearGradientMode linearGradientMode)
     {
         using LinearGradientBrush brush = new(rectangle, color1, color2, linearGradientMode);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -100,7 +100,7 @@ public class LinearGradientBrushTests
     public void Ctor_RectangleF_Color_Color_LinearGradientMode(Rectangle rectangle, Color color1, Color color2, LinearGradientMode linearGradientMode)
     {
         using LinearGradientBrush brush = new((RectangleF)rectangle, color1, color2, linearGradientMode);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -126,7 +126,7 @@ public class LinearGradientBrushTests
     public void Ctor_Rectangle_Color_Color_Angle(Rectangle rectangle, Color color1, Color color2, float angle)
     {
         using LinearGradientBrush brush = new(rectangle, color1, color2, angle);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -143,7 +143,7 @@ public class LinearGradientBrushTests
     public void Ctor_RectangleF_Color_Color_Angle(Rectangle rectangle, Color color1, Color color2, float angle)
     {
         using LinearGradientBrush brush = new((RectangleF)rectangle, color1, color2, angle);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -169,7 +169,7 @@ public class LinearGradientBrushTests
     public void Ctor_Rectangle_Color_Color_Angle_IsAngleScalable(Rectangle rectangle, Color color1, Color color2, float angle, bool isAngleScalable)
     {
         using LinearGradientBrush brush = new(rectangle, color1, color2, angle, isAngleScalable);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);
@@ -186,7 +186,7 @@ public class LinearGradientBrushTests
     public void Ctor_RectangleF_Color_Color_Angle_IsAngleScalable(Rectangle rectangle, Color color1, Color color2, float angle, bool isAngleScalable)
     {
         using LinearGradientBrush brush = new((RectangleF)rectangle, color1, color2, angle, isAngleScalable);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
 
         Assert.False(brush.GammaCorrection);

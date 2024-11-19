@@ -40,7 +40,7 @@ public partial class MatrixTests
     public void Ctor_Default()
     {
         using Matrix matrix = new();
-        Assert.Equal([1, 0, 0, 1, 0, 0], matrix.Elements);
+        Assert.Equal((float[])[1, 0, 0, 1, 0, 0], matrix.Elements);
         Assert.True(matrix.IsIdentity);
         Assert.True(matrix.IsInvertible);
         Assert.Equal(0, matrix.OffsetX);
@@ -161,7 +161,7 @@ public partial class MatrixTests
         using Matrix matrix = new(1, 2, 3, 4, 5, 6);
         using Matrix clone = Assert.IsType<Matrix>(matrix.Clone());
         Assert.NotSame(matrix, clone);
-        Assert.Equal([1, 2, 3, 4, 5, 6], clone.Elements);
+        Assert.Equal((float[])[1, 2, 3, 4, 5, 6], clone.Elements);
     }
 
     [Fact]
@@ -381,10 +381,10 @@ public partial class MatrixTests
     {
         using Matrix matrix = new(1, 2, 3, 4, 5, 6);
         matrix.Reset();
-        Assert.Equal([1, 0, 0, 1, 0, 0], matrix.Elements);
+        Assert.Equal((float[])[1, 0, 0, 1, 0, 0], matrix.Elements);
 
         matrix.Reset();
-        Assert.Equal([1, 0, 0, 1, 0, 0], matrix.Elements);
+        Assert.Equal((float[])[1, 0, 0, 1, 0, 0], matrix.Elements);
     }
 
     [Fact]

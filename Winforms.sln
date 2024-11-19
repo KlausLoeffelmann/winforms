@@ -166,6 +166,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{8B4B1E09-B3C
 		eng\packageContent.targets = eng\packageContent.targets
 		eng\Publishing.props = eng\Publishing.props
 		start-vs.cmd = start-vs.cmd
+		eng\versioning.targets = eng\versioning.targets
 		eng\Versions.props = eng\Versions.props
 	EndProjectSection
 EndProject

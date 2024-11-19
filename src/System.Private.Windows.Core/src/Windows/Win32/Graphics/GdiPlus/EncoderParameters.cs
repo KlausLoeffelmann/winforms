@@ -8,5 +8,5 @@ namespace Windows.Win32.Graphics.GdiPlus;
 internal partial struct EncoderParameters
 {
     [UnscopedRef]
-    internal unsafe Span<EncoderParameter> Parameters => MemoryMarshal.CreateSpan(ref Parameter._0, (int)Count);
+    internal unsafe Span<EncoderParameter> Parameters => MemoryMarshal.CreateSpan(ref Parameter.e0, (int)Count);
 }

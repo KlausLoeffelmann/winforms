@@ -940,12 +940,12 @@ public class PathGradientBrushTests
     private void AssertDefaults(PathGradientBrush brush)
     {
         Assert.Equal(_defaultRectangle, brush.Rectangle);
-        Assert.Equal([1], brush.Blend.Factors);
+        Assert.Equal((float[])[1], brush.Blend.Factors);
         Assert.Equal(1, brush.Blend.Positions.Length);
         Assert.Equal(new PointF(10.5f, 16f), brush.CenterPoint);
         Assert.Equal(new Color[] { Color.Empty }, brush.InterpolationColors.Colors);
         Assert.Equal(new Color[] { Color.FromArgb(255, 255, 255, 255) }, brush.SurroundColors);
-        Assert.Equal([0], brush.InterpolationColors.Positions);
+        Assert.Equal((float[])[0], brush.InterpolationColors.Positions);
         Assert.True(brush.Transform.IsIdentity);
         Assert.True(brush.FocusScales.IsEmpty);
     }
