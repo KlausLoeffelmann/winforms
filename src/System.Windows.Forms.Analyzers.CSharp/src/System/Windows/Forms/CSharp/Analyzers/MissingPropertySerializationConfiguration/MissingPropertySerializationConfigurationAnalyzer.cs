@@ -12,6 +12,9 @@ namespace System.Windows.Forms.CSharp.Analyzers.MissingPropertySerializationConf
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnalyzer
 {
+    private const string FullnameOfIComponentModel = "System.ComponentModel.IComponent";
+    private const string SystemComponentModelAssemblyName = "System.ComponentModel.Primitives";
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
         => [CSharpDiagnosticDescriptors.s_missingPropertySerializationConfiguration];
 
@@ -27,7 +30,7 @@ public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnaly
         // We analyze only properties.
         var propertySymbol = (IPropertySymbol)context.Symbol;
 
-        // Does the property belong to a class which derives from Component?
+        // Does the property belong to a class which derives from a class which implements IComponent?
         if (propertySymbol.ContainingType is null
             || !propertySymbol
                 .ContainingType
@@ -52,7 +55,25 @@ public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnaly
             return;
         }
 
-        // Now, it get's a bit more tedious:
+        // Now, it get's a bit more tedious.
+        // Get _the_ IComponent type from System.ComponentModel
+        INamedTypeSymbol? iComponentSymbol = context.Compilation.GetTypeByMetadataName(FullnameOfIComponentModel);
+
+        // Let's make sure, we got that Symbol also from the correct Assembly:
+        if (iComponentSymbol is null
+            || iComponentSymbol.ContainingAssembly.Name != SystemComponentModelAssemblyName)
+        {
+            // Nope, it's not.
+            return;
+        }
+
+        // Compare symbols using the default equality comparer
+        if (!SymbolEqualityComparer.Default.Equals(propertySymbol, iComponentSymbol))
+        {
+            // Not the IComponent we were looking for.
+            return;
+        }
+
         // If the Serialization is managed via ShouldSerialize and Reset methods, we are also fine,
         // so let's check for that. First, let's get the class of the property:
         INamedTypeSymbol classSymbol = propertySymbol.ContainingType;

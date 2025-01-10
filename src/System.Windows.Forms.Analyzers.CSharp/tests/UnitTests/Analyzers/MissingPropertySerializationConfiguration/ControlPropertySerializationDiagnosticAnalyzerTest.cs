@@ -19,6 +19,18 @@ public class ControlPropertySerializationDiagnosticAnalyzerTest
     private const string ProblematicCode = """
         namespace CSharpControls;
 
+        // That's a user defined Interface which happens to be named like the one we are looking for.
+        // We need to make sure, we're not taking that one into account!
+        public interface IComponent
+        {
+        }
+
+        public class SomeNonComponentModelComponent : IComponent
+        {
+            // This property must not get flagged.
+            public int SomeProperty { get; set; }
+        }
+
         public static class Program
         {
             public static void Main()
