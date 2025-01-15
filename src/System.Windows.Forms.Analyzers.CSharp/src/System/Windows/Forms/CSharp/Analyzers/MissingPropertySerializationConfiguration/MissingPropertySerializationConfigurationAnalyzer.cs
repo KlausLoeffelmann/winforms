@@ -12,7 +12,7 @@ namespace System.Windows.Forms.CSharp.Analyzers.MissingPropertySerializationConf
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnalyzer
 {
-    private const string FullnameOfIComponentModel = "System.ComponentModel.IComponent";
+    private const string FullNameOfIComponentModel = "System.ComponentModel.IComponent";
     private const string SystemComponentModelAssemblyName = "System.ComponentModel.Primitives";
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics
@@ -57,7 +57,7 @@ public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnaly
 
         // Now, it get's a bit more tedious.
         // Get _the_ IComponent type from System.ComponentModel
-        INamedTypeSymbol? iComponentSymbol = context.Compilation.GetTypeByMetadataName(FullnameOfIComponentModel);
+        INamedTypeSymbol? iComponentSymbol = context.Compilation.GetTypeByMetadataName(FullNameOfIComponentModel);
 
         // Let's make sure, we got that Symbol also from the correct Assembly:
         if (iComponentSymbol is null

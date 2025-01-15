@@ -12,6 +12,11 @@ Namespace Global.System.Windows.Forms.VisualBasic.Analyzers.MissingPropertySeria
     Public Class MissingPropertySerializationConfigurationAnalyzer
         Inherits DiagnosticAnalyzer
 
+        Private Const ComponentTypeName As String = "System.ComponentModel.IComponent"
+        Private Const ComponentAssemblyName As String = "System.ComponentModel.Primitives"
+        Private Const DesignerSerializationVisibilityAttributeName As String = NameOf(DesignerSerializationVisibilityAttribute)
+        Private Const DefaultValueAttributeName As String = NameOf(DefaultValueAttribute)
+
         Public Overrides ReadOnly Property SupportedDiagnostics As ImmutableArray(Of DiagnosticDescriptor)
             Get
                 Return ImmutableArray.Create(s_missingPropertySerializationConfiguration)
@@ -32,10 +37,18 @@ Namespace Global.System.Windows.Forms.VisualBasic.Analyzers.MissingPropertySeria
                 Return
             End If
 
+            ' Get the IComponent type from the correct namespace and assembly
+            Dim componentType As INamedTypeSymbol = context _
+                .Compilation _
+                .GetTypeByMetadataName($"{ComponentTypeName}, {ComponentAssemblyName}")
+
+            If componentType Is Nothing Then
+                Return
+            End If
+
             ' Does the property belong to a class which derives from Component?
             If propertySymbol.ContainingType Is Nothing OrElse
-               Not propertySymbol.ContainingType.AllInterfaces.Any(
-                Function(i) i.Name = NameOf(IComponent)) Then
+               Not propertySymbol.ContainingType.AllInterfaces.Contains(componentType) Then
 
                 Return
             End If
@@ -49,8 +62,8 @@ Namespace Global.System.Windows.Forms.VisualBasic.Analyzers.MissingPropertySeria
 
             ' Is the property attributed with DesignerSerializationVisibility or DefaultValue?
             If propertySymbol.GetAttributes().Any(
-                Function(a) a?.AttributeClass?.Name = NameOf(DesignerSerializationVisibilityAttribute) OrElse
-                    a?.AttributeClass?.Name = NameOf(DefaultValueAttribute)) Then
+                Function(a) a?.AttributeClass?.Name = DesignerSerializationVisibilityAttributeName OrElse
+                    a?.AttributeClass?.Name = DefaultValueAttributeName) Then
 
                 Return
             End If
