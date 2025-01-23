@@ -55,7 +55,7 @@ public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnaly
             return;
         }
 
-        // Now, it get's a bit more tedious.
+        // Now, it get's a bit more compute intensive.
         // Get _the_ IComponent type from System.ComponentModel
         INamedTypeSymbol? iComponentSymbol = context.Compilation.GetTypeByMetadataName(FullNameOfIComponentModel);
 
@@ -64,13 +64,6 @@ public class MissingPropertySerializationConfigurationAnalyzer : DiagnosticAnaly
             || iComponentSymbol.ContainingAssembly.Name != SystemComponentModelAssemblyName)
         {
             // Nope, it's not.
-            return;
-        }
-
-        // Compare symbols using the default equality comparer
-        if (!SymbolEqualityComparer.Default.Equals(propertySymbol, iComponentSymbol))
-        {
-            // Not the IComponent we were looking for.
             return;
         }
 
