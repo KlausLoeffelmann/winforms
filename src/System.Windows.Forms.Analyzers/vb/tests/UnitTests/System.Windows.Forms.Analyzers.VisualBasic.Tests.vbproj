@@ -6,6 +6,32 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\DerivedFromUntyped.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\TwoInterfaces.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\TypedInterface.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\TypedWithAlias.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\TypedWithNamespace.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\UnrelatedIDataObject.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\UntypedInterface.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\UntypedUnimplemented.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\UntypedWithAlias.vb" />
+    <Compile Remove="AnalyzerTests\WFO1001\TestData\UntypedWithNamespace.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="AnalyzerTests\WFO1001\TestData\DerivedFromUntyped.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\TwoInterfaces.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\TypedInterface.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\TypedWithAlias.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\TypedWithNamespace.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\UnrelatedIDataObject.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\UntypedInterface.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\UntypedUnimplemented.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\UntypedWithAlias.vb" />
+    <None Include="AnalyzerTests\WFO1001\TestData\UntypedWithNamespace.vb" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

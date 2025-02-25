@@ -41,6 +41,16 @@
     <Compile Remove="Analyzer\MissingPropertySerializationConfiguration\TestData\CustomControlScenarios\FixedTestCode.cs" />
     <Compile Remove="Analyzer\MissingPropertySerializationConfiguration\TestData\CustomControlScenarios\GlobalUsing.cs" />
     <Compile Remove="Analyzer\MissingPropertySerializationConfiguration\TestData\CustomControlScenarios\Program.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\DerivedFromUntyped.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\TwoInterfaces.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\TypedInterface.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\TypedWithAlias.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\TypedWithNamespace.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\UnrelatedIDataObject.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\UntypedInterface.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\UntypedUnimplemented.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\UntypedWithAlias.cs" />
+    <Compile Remove="Analyzer\WFO1001\TestData\UntypedWithNamespace.cs" />
     <Compile Remove="Generators\ApplicationConfigurationInitializeBuilderTests\MockData\Default_boilerplate.cs" />
     <Compile Remove="Generators\ApplicationConfigurationInitializeBuilderTests\MockData\Default_top_level.cs" />
   </ItemGroup>
@@ -52,6 +62,16 @@
     <None Include="Analyzer\MissingPropertySerializationConfiguration\TestData\CustomControlScenarios\FixedTestCode.cs" />
     <None Include="Analyzer\MissingPropertySerializationConfiguration\TestData\CustomControlScenarios\GlobalUsing.cs" />
     <None Include="Analyzer\MissingPropertySerializationConfiguration\TestData\CustomControlScenarios\Program.cs" />
+    <None Include="Analyzer\WFO1001\TestData\DerivedFromUntyped.cs" />
+    <None Include="Analyzer\WFO1001\TestData\TwoInterfaces.cs" />
+    <None Include="Analyzer\WFO1001\TestData\TypedInterface.cs" />
+    <None Include="Analyzer\WFO1001\TestData\TypedWithAlias.cs" />
+    <None Include="Analyzer\WFO1001\TestData\TypedWithNamespace.cs" />
+    <None Include="Analyzer\WFO1001\TestData\UnrelatedIDataObject.cs" />
+    <None Include="Analyzer\WFO1001\TestData\UntypedInterface.cs" />
+    <None Include="Analyzer\WFO1001\TestData\UntypedUnimplemented.cs" />
+    <None Include="Analyzer\WFO1001\TestData\UntypedWithAlias.cs" />
+    <None Include="Analyzer\WFO1001\TestData\UntypedWithNamespace.cs" />
     <None Include="Generators\ApplicationConfigurationInitializeBuilderTests\MockData\Default_boilerplate.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
