@@ -29,4 +29,8 @@
     <ProjectReference Include="..\..\src\CodeFixes\System.Windows.Forms.Analyzers.CodeFixes.VisualBasic.vbproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Analyzer\AvoidPassingTaskWithoutCancellationToken\CustomControlScenarios\" />
+  </ItemGroup>
+
 </Project>

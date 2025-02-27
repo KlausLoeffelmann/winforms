@@ -8,7 +8,7 @@ Imports Microsoft.CodeAnalysis.Testing
 Imports Microsoft.CodeAnalysis.VisualBasic.Testing
 Imports Xunit
 
-Public Class AvoidPassingTaskWithoutCancellationTokenTest
+Public Class InvokeAsyncOnControl
     ' Currently, we do not have Control.InvokeAsync in the .NET 9.0 Windows reference assemblies.
     ' That's why we need to add this Async Control. Once it's there, this test will fail.
     ' We can then remove the AsyncControl and the test will pass, replace AsyncControl with
