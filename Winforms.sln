@@ -188,8 +188,8 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "System.Windows.Forms.Analyz
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Prompting", "Prompting", "{681B7522-35D1-4D58-8956-6E5E26D461B2}"
 	ProjectSection(SolutionItems) = preProject
-		src\System.Windows.Forms.Analyzers\prompting\AnalyzerTests-Copilot-Instructions.md = src\System.Windows.Forms.Analyzers\prompting\AnalyzerTests-Copilot-Instructions.md
 		src\System.Windows.Forms.Analyzers\prompting\SamplePrompt for AnalyzerTests.md = src\System.Windows.Forms.Analyzers\prompting\SamplePrompt for AnalyzerTests.md
+		src\System.Windows.Forms.Analyzers\prompting\Analyzer-Copilot-Instructions.md = src\System.Windows.Forms.Analyzers\prompting\Analyzer-Copilot-Instructions.md
 	EndProjectSection
 EndProject
 Global

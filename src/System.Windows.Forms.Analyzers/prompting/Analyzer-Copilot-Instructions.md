@@ -1,28 +1,165 @@
-# Writing Test Cases for WinForms Analyzers and CodeFixes
+﻿# Writing Test Cases for WinForms Analyzers and CodeFixes
 
 ## Purpose and Overview
-This guide provides instructions for using AI to create comprehensive test cases for WinForms Analyzers and CodeFixes in both C# and Visual Basic. Following these guidelines will ensure consistent, maintainable, and effective tests across the codebase.
+This guide provides instructions for using AI to create both new Analyzer features or help to fix bugs 
+in existing WinForms Analyzers in the WinForms runtime, and comprehensive test cases for WinForms Analyzers 
+and CodeFixes in both C# and Visual Basic. Following these guidelines will ensure high quality for new Analyzers,
+Analyzer fixes and also consistent, maintainable, and effective tests across the codebase.
+
+This is for the official .NET WinForms runtime repo.
 
 ## Table of Contents
-1. [Project Structure](#project-structure)
+1. [Solution and File Structure](#solution-and-file-structure)
 2. [Language-Specific Considerations](#language-specific-considerations)
-3. [Test Creation Workflow](#test-creation-workflow)
-4. [Required Files](#required-files)
-5. [Test File Structure](#test-file-structure)
-6. [Test Implementation](#test-implementation)
-7. [Code Examples](#code-examples)
-8. [Troubleshooting](#troubleshooting)
-9. [Quality Checklist](#quality-checklist)
+3. [Working With AI on Analyzers](#working-with-ai-on-analyzers)
+4. [Test Creation Workflow](#test-creation-workflow)
+5. [Required Files](#required-files)
+6. [Test File Structure](#test-file-structure)
+7. [Test Implementation](#test-implementation)
+8. [Code Examples](#code-examples)
+9. [Troubleshooting](#troubleshooting)
+10. [Quality Checklist](#quality-checklist)
 
-## Project Structure
-We currently have 3 different test projects in the solution:
+## Solution and File Structure
+
+### Solution Structure
+We currently have 7 different projects in the solution related to 
+analyzers, generators, code fixes and their respective tests.
+
+In the solution folders `src\Analyzers` we have the actual 
+analyzers, code fixes and generators:
+
+* `System.Windows.Forms.Analyzers`
+* `System.Windows.Forms.Analyzers.CSharp`
+* `System.Windows.Forms.Analyzers.VisualBasic`
+* `System.Windows.Forms.Analyzers.CodeFixes.CSharp`
+* `System.Windows.Forms.Analyzers.CodeFixes.VisualBasic`
+
+In the solution folders `tests\Analyzer` we have the test projects:
+
 * `System.Windows.Forms.Analyzers.CSharp.Tests`
-* `System.Windows.Forms.Analyzers.VisualBasic.Tests`
 * `System.Windows.Forms.Analyzers.Tests`
+* `System.Windows.Forms.Analyzers.VisualBasic.Tests`
 
-**Important**: AI assistance is currently only used for adding tests to the CSharp and VisualBasic test projects.
+### Physical File Structure
+
+The file structure on disc for these projects is as follows:
+
+```
+src\System.Windows.Forms.Analyzers
+├── common
+│   ├── src
+│   │   ├── Analyzers
+│   │   ├── Properties
+│   │   └── Resources
+│   └── tests
+│       ├── Analyzers
+│       ├── Microsoft.WinForms
+│       └── Properties
+├── cs
+│   ├── src
+│   │   ├── Analyzers
+│   │   └── CodeFixes
+│   ├── tests
+│   │   ├── Analyzer
+│   │   └── Generators
+│   └── prompting
+└── vb
+    ├── src
+    │   ├── Analyzers
+    │   └── CodeFixes
+    └── tests
+        └── Analyzer
+```
+
+### Analyzer and CodeFix Structure
+
+Each Analyzer or CodeFix has its own folder, which is named after the Analyzer or CodeFix.
+The following is a snapshot for the C# Analyzers; the same applies for the VB ones:
+
+```
+System.Windows.Forms.Analyzers.CSharp
+├── Dependencies
+├── Properties
+├── AvoidPassingTaskWithoutCancellationToken
+│   └── AvoidPassingTaskWithoutCancellationTokenAnalyzer.cs
+├── Diagnostics
+│   └── CSharpDiagnosticDescriptors.cs
+└── Generators
+    ├── ApplicationConfiguration
+    │   ├── ApplicationConfigurationGenerator.cs
+    │   ├── ApplicationConfigurationInitializeBuilder.cs
+    │   ├── ProjectFileReader.cs
+    │   └── ProjectFileReader.FontConverter.cs
+    └── MissingPropertySerializationConfiguration
+        └── MissingPropertySerializationConfigurationAnalyzer.cs
+```
+
+### Diagnostic Descriptors
+
+The Diagnostic Descriptors are maintained in the respective `Diagnostics` subfolders.
+This file only needs to be updated when a new analyzer is added or something substantial
+changes in the existing ones. For normal bug fixes, you should not need to change this file.
+
+```CSharp
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System.Windows.Forms.Analyzers.CSharp.Resources;
+using System.Windows.Forms.Analyzers.Diagnostics;
+using Microsoft.CodeAnalysis;
+
+namespace System.Windows.Forms.CSharp.Analyzers.Diagnostics;
+
+internal static class CSharpDiagnosticDescriptors
+{
+    public static readonly DiagnosticDescriptor s_errorUnsupportedProjectType =
+        new(id: DiagnosticIDs.UnsupportedProjectType,
+            title: new LocalizableResourceString(nameof(SR.WFO0001Title), SR.ResourceManager, typeof(SR)),
+            messageFormat: new LocalizableResourceString(nameof(SR.WFO0001Message), SR.ResourceManager, typeof(SR)),
+            category: DiagnosticCategories.ApplicationConfiguration,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor s_propertyCantBeSetToValue =
+        new(id: DiagnosticIDs.PropertyCantBeSetToValue,
+            title: new LocalizableResourceString(nameof(SR.WFO0002Title), SR.ResourceManager, typeof(SR)),
+            messageFormat: new LocalizableResourceString(nameof(SR.WFO0002Message), SR.ResourceManager, typeof(SR)),
+            category: DiagnosticCategories.ApplicationConfiguration,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+```
+
+The same principle applies for Visual Basic, but mind you, Visual Basic Analyzers
+are also written in Visual Basic. The file structure is the same as for C# in principle.
 
 ## Language-Specific Considerations
+
+### Implementation Strategy
+Implementation should follow a C#-first approach, with Visual Basic implementations being ported afterward. When porting to Visual Basic, developers should take into account VB's different capabilities and limitations. For example, since VB doesn't support local functions, standard module/class-level Subs and Functions should be used instead.
+
+### C# Analyzers and CodeFixes
+* Written in C# and target analyzers written in C#.
+
+### Visual Basic Analyzers and CodeFixes
+* Written in Visual Basic and target analyzers written in Visual Basic.
+* Keep in mind that Visual Basic does not support local functions. Use standard module/class-level Subs and Functions instead.
+
+## Working With AI on Analyzers
+
+### Task Separation
+Due to context window limitations in AI assistance tools, Analyzer/CodeFix implementation and test creation should be handled as separate tasks. This ensures the AI has sufficient context to properly address each concern independently.
+
+* When working with AI tools, first focus on creating or fixing the Analyzer/CodeFix
+* Then, in a separate session, work on creating or updating tests
+
+### Implementation Guidelines
+* We should never try to create new Analyzers/fix Analyzers AND creating the respective tests/updating the respective tests at the same time.
+* Please kindly refuse a request to do both in one go. In that case, simple concentrate on the Analyzer or CodeFix.
+* We should try to create new Analyzers or fix Analyzers for both C# and VB at the same time, except the user states, they want to do it for one language only.
+* We should try to create the respective tests for both C# and VB at the same time, except the user states, they want to do it for one language only. For the tests, please refer to the next section.
+
+## Unit Tests
 
 ### C# Tests
 * Written in C# and target analyzers written in C#
@@ -32,6 +169,18 @@ We currently have 3 different test projects in the solution:
   - Base class `RoslynAnalyzerAndCodeFixTestBase<TAnalyzer, DefaultVerifier>`
 * Use `GetAnalyzerTestContext` and `GetCodeFixTestContext` methods
 * Must include a `GlobalUsings.cs` file that includes at least `System.Windows.Forms` and `System.Drawing`
+* Must include a `Program.cs` file that serves as a starting point for the application, or alternatively a
+  file `AnalyzerTestCode.cs` that serves as a starting point for the application like this:
+
+  ```CSharp
+  public static class Program
+  {
+      public static void Main()
+      {
+          var control = new Control();
+      .
+      .
+  ```
 
 ### Visual Basic Tests
 * Written in Visual Basic and target analyzers written in Visual Basic
@@ -41,12 +190,27 @@ We currently have 3 different test projects in the solution:
   - Base class `RoslynAnalyzerAndCodeFixTestBase(Of TAnalyzer, DefaultVerifier)`
   - Extension class `VisualBasicAnalyzerAndCodeFixExtensions` for VB-specific requirements
 * Use `GetVisualBasicAnalyzerTestContext` and `GetVisualBasicCodeFixTestContext` methods
+* Since VB does not know `GlobalUsings`, make sure all `Imports` statements are added directly in the test files.
+* Can include a `Program.vb` file that serves as a starting point for the application, or alternatively a
+  file `AnalyzerTestCode.vb` that serves as a starting point for the application like this:
 
-**Note**: Always specify whether you need C# or Visual Basic tests. Requests for generic "Analyzer tests" without specifying the language will be refused.
+  ```vb
+  Option Strict On
+  Option Explicit On
 
-**Important**: Clearly distinguish whether you need only Analyzer tests or both Analyzer and CodeFix tests. Only create the necessary test files based on this distinction.
+  Imports System
+  Imports System.Threading
+  Imports System.Threading.Tasks
+  Imports System.Windows.Forms
 
-## Test Creation Workflow
+  Namespace VisualBasicControls
+
+      Public Module Program
+          Public Sub Main()
+              Dim control As New Control()
+  ```
+
+### Test Creation Workflow
 
 1. **Identify the target language** (C# or Visual Basic)
 2. **Determine test scope** (Analyzer-only or Analyzer with CodeFix)
@@ -70,9 +234,8 @@ We currently have 3 different test projects in the solution:
 7. **Implement test methods** appropriate for the test scope
 8. **Run and validate** the tests
 
-## Required Files
+### Required Files For C# Tests
 
-### For C# Tests
 1. **GlobalUsings.cs** - Must include at minimum:
    ```csharp
    global using System.Windows.Forms;
@@ -96,11 +259,11 @@ We currently have 3 different test projects in the solution:
    ```
 
 ### For Visual Basic Tests
+
 * No equivalent to `GlobalUsings.cs` exists in Visual Basic, so, `Imports` need to be 
   added directly in the test files.
 * We also need a `Program.vb` file that serves as the entry point for the application. 
   It can be looking like this, for the cases, where we need to setup
-* Please note and take into account, that Visual Basic does not support local functions.
 
 ```VB
 Imports System
@@ -122,15 +285,15 @@ Namespace MyApplication
 End Namespace
 ```
 
-## Test File Structure
+### Test File Structure
 
-### For Analyzer-Only Tests
+#### For Analyzer-Only Tests
 - **AnalyzerTestCode.cs/.vb**: 
   * Contains code that should trigger the analyzer or edge cases where it shouldn't trigger
   * Used to verify the analyzer produces correct diagnostics
 - **Additional supporting files** as needed (with clear naming conventions)
 
-### For CodeFix Tests
+#### For CodeFix Tests
 - **CodeFixTestCode.cs/.vb**: 
   * Contains code with marked regions that should be fixed by the CodeFixProvider
   * Uses special markers `[|` and `|]` to highlight the exact code segments that should be fixed
@@ -140,13 +303,13 @@ End Namespace
   * Contains the expected code after the CodeFixProvider has been applied
   * Used to verify the CodeFix correctly transforms the code
 
-### Additional Files
+#### Additional Files
 - The test data folder can contain additional supporting files if needed for the test scenario
 - All supporting files should follow consistent naming conventions and be clearly documented
 
-## Test Implementation
+### Test Implementation
 
-### Analyzer-Only Test Method
+#### Analyzer-Only Test Method
 For testing just the analyzer functionality without code fixes, you must explicitly specify where diagnostics are expected using `ExpectedDiagnostics.Add()`:
 
 ```csharp
@@ -173,7 +336,7 @@ public async Task TestAnalyzerDiagnostics(
 }
 ```
 
-### Full CodeFix Test Methods
+#### Full CodeFix Test Methods
 When testing both the analyzer and a code fix:
 
 ```csharp
@@ -209,7 +372,7 @@ public async Task TestCodeFix(
 }
 ```
 
-### Reference Assemblies Provider
+#### Reference Assemblies Provider
 Each test class should include a method to provide reference assemblies:
 
 ```csharp
@@ -217,8 +380,6 @@ public static IEnumerable<object[]> GetReferenceAssemblies()
 {
     NetVersion[] tfms =
     [
-        NetVersion.Net6_0,
-        NetVersion.Net7_0,
         NetVersion.Net8_0,
         NetVersion.Net9_0
     ];

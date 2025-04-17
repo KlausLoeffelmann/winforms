@@ -31,15 +31,36 @@ public class AvoidPassingTaskWithoutCancellationTokenAnalyzer : DiagnosticAnalyz
     {
         var invocationExpr = (InvocationExpressionSyntax)context.Node;
         IMethodSymbol? methodSymbol = null;
+        ExpressionSyntax? targetExpression = null;
 
-        // Handle both explicit member access (this.InvokeAsync) and implicit method calls (InvokeAsync)
+        // Handle both cases: explicit member access (this.InvokeAsync/Control.InvokeAsync) and implicit calls (InvokeAsync)
         if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccessExpr)
         {
+            // Explicit case: obj.InvokeAsync(...)
             methodSymbol = context.SemanticModel.GetSymbolInfo(memberAccessExpr).Symbol as IMethodSymbol;
+            targetExpression = memberAccessExpr.Expression;
         }
         else if (invocationExpr.Expression is IdentifierNameSyntax identifierNameSyntax)
         {
+            // Implicit case: InvokeAsync(...)
             methodSymbol = context.SemanticModel.GetSymbolInfo(identifierNameSyntax).Symbol as IMethodSymbol;
+
+            // For implicit calls, we need to check if we're in a Control-derived class
+            if (methodSymbol is not null && methodSymbol.Name == InvokeAsyncString && methodSymbol.Parameters.Length == 2)
+            {
+                // Get the containing type of the current method
+                var containingType = context.SemanticModel.GetEnclosingSymbol(invocationExpr.SpanStart)?.ContainingType;
+
+                // Only proceed if we're in a Control-derived class
+                if (containingType is not null && !IsAncestorOrSelfOfType(containingType, "System.Windows.Forms.Control"))
+                {
+                    return;
+                }
+            }
+        }
+        else
+        {
+            return;
         }
 
         if (methodSymbol is null || methodSymbol.Name != InvokeAsyncString || methodSymbol.Parameters.Length != 2)
@@ -48,7 +69,6 @@ public class AvoidPassingTaskWithoutCancellationTokenAnalyzer : DiagnosticAnalyz
         }
 
         IParameterSymbol funcParameter = methodSymbol.Parameters[0];
-        INamedTypeSymbol? containingType = methodSymbol.ContainingType;
 
         // If the function delegate has a parameter (which makes then 2 type arguments),
         // we can safely assume it's a CancellationToken, otherwise the compiler would have
@@ -61,21 +81,14 @@ public class AvoidPassingTaskWithoutCancellationTokenAnalyzer : DiagnosticAnalyz
             return;
         }
 
-        // Let's make absolute clear, we're dealing with InvokeAsync of Control.
-        // For implicit calls, we check the containing type of the method itself.
-        if (containingType is null || !IsAncestorOrSelfOfType(containingType, "System.Windows.Forms.Control"))
+        // For explicit calls, check if the target is a Control
+        if (targetExpression is not null)
         {
-            // For explicit calls, we need to check the instance type (from before)
-            if (invocationExpr.Expression is MemberAccessExpressionSyntax memberAccess)
-            {
-                TypeInfo objectTypeInfo = context.SemanticModel.GetTypeInfo(memberAccess.Expression);
-                if (objectTypeInfo.Type is not INamedTypeSymbol objectType
-                    || !IsAncestorOrSelfOfType(objectType, "System.Windows.Forms.Control"))
-                {
-                    return;
-                }
-            }
-            else
+            TypeInfo objectTypeInfo = context.SemanticModel.GetTypeInfo(targetExpression);
+
+            // Let's make absolute clear, we're dealing with InvokeAsync of Control.
+            if (objectTypeInfo.Type is not INamedTypeSymbol objectType
+                || !IsAncestorOrSelfOfType(objectType, "System.Windows.Forms.Control"))
             {
                 return;
             }
@@ -92,11 +105,11 @@ public class AvoidPassingTaskWithoutCancellationTokenAnalyzer : DiagnosticAnalyz
 
             context.ReportDiagnostic(diagnostic);
         }
-
-        // Helper method to check if a type is of a certain type or a derived type.
-        static bool IsAncestorOrSelfOfType(INamedTypeSymbol? type, string typeName) =>
-            type is not null
-            && (type.ToString().Equals(typeName)
-            || IsAncestorOrSelfOfType(type.BaseType, typeName));
     }
+
+    // Helper method to check if a type is of a certain type or a derived type.
+    private static bool IsAncestorOrSelfOfType(INamedTypeSymbol? type, string typeName) =>
+        type is not null
+        && (type.ToString().Equals(typeName)
+        || IsAncestorOrSelfOfType(type.BaseType, typeName));
 }

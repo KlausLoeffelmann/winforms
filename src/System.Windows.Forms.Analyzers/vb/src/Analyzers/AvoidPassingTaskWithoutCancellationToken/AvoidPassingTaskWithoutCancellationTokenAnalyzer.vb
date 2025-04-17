@@ -32,14 +32,31 @@ Namespace Global.System.Windows.Forms.VisualBasic.Analyzers.AvoidPassingTaskWith
         Private Sub AnalyzeInvocation(context As SyntaxNodeAnalysisContext)
             Dim invocationExpr = DirectCast(context.Node, InvocationExpressionSyntax)
             Dim methodSymbol As IMethodSymbol = Nothing
+            Dim targetExpression As ExpressionSyntax = Nothing
 
-            ' Handle both explicit member access (Me.InvokeAsync) and implicit method calls (InvokeAsync)
+            ' Handle both cases: explicit member access (Me.InvokeAsync/Control.InvokeAsync) and implicit calls (InvokeAsync)
             If TypeOf invocationExpr.Expression Is MemberAccessExpressionSyntax Then
+                ' Explicit case: obj.InvokeAsync(...)
                 Dim memberAccessExpr = DirectCast(invocationExpr.Expression, MemberAccessExpressionSyntax)
                 methodSymbol = TryCast(context.SemanticModel.GetSymbolInfo(memberAccessExpr).Symbol, IMethodSymbol)
+                targetExpression = memberAccessExpr.Expression
             ElseIf TypeOf invocationExpr.Expression Is IdentifierNameSyntax Then
+                ' Implicit case: InvokeAsync(...)
                 Dim identifierNameSyntax = DirectCast(invocationExpr.Expression, IdentifierNameSyntax)
                 methodSymbol = TryCast(context.SemanticModel.GetSymbolInfo(identifierNameSyntax).Symbol, IMethodSymbol)
+
+                ' For implicit calls, we need to check if we're in a Control-derived class
+                If methodSymbol IsNot Nothing AndAlso methodSymbol.Name = InvokeAsyncString AndAlso methodSymbol.Parameters.Length = 2 Then
+                    ' Get the containing type of the current method
+                    Dim containingType = context.SemanticModel.GetEnclosingSymbol(invocationExpr.SpanStart)?.ContainingType
+
+                    ' Only proceed if we're in a Control-derived class
+                    If containingType IsNot Nothing AndAlso Not IsAncestorOrSelfOfType(containingType, "System.Windows.Forms.Control") Then
+                        Return
+                    End If
+                End If
+            Else
+                Return
             End If
 
             If methodSymbol Is Nothing OrElse methodSymbol.Name <> InvokeAsyncString OrElse methodSymbol.Parameters.Length <> 2 Then
@@ -47,7 +64,6 @@ Namespace Global.System.Windows.Forms.VisualBasic.Analyzers.AvoidPassingTaskWith
             End If
 
             Dim funcParameter As IParameterSymbol = methodSymbol.Parameters(0)
-            Dim containingType As INamedTypeSymbol = methodSymbol.ContainingType
 
             ' If the function delegate has a parameter (which makes then 2 type arguments),
             ' we can safely assume it's a CancellationToken, otherwise the compiler would have
@@ -63,24 +79,18 @@ Namespace Global.System.Windows.Forms.VisualBasic.Analyzers.AvoidPassingTaskWith
                 Return
             End If
 
-            ' Let's make absolute clear, we're dealing with InvokeAsync of Control.
-            ' For implicit calls, we check the containing type of the method itself.
-            If containingType Is Nothing OrElse Not IsAncestorOrSelfOfType(containingType, "System.Windows.Forms.Control") Then
-                ' For explicit calls, we need to check the instance type (from before)
-                If TypeOf invocationExpr.Expression Is MemberAccessExpressionSyntax Then
-                    Dim memberAccess = DirectCast(invocationExpr.Expression, MemberAccessExpressionSyntax)
-                    Dim objectTypeInfo As TypeInfo = context.SemanticModel.GetTypeInfo(memberAccess.Expression)
+            ' For explicit calls, check if the target is a Control
+            If targetExpression IsNot Nothing Then
+                Dim objectTypeInfo As TypeInfo = context.SemanticModel.GetTypeInfo(targetExpression)
 
-                    If Not (TypeOf objectTypeInfo.Type Is INamedTypeSymbol) Then
-                        Return
-                    End If
+                ' Let's make absolute clear, we're dealing with InvokeAsync of Control.
+                If Not (TypeOf objectTypeInfo.Type Is INamedTypeSymbol) Then
+                    Return
+                End If
 
-                    Dim objectType = DirectCast(objectTypeInfo.Type, INamedTypeSymbol)
+                Dim objectType = DirectCast(objectTypeInfo.Type, INamedTypeSymbol)
 
-                    If Not IsAncestorOrSelfOfType(objectType, "System.Windows.Forms.Control") Then
-                        Return
-                    End If
-                Else
+                If Not IsAncestorOrSelfOfType(objectType, "System.Windows.Forms.Control") Then
                     Return
                 End If
             End If

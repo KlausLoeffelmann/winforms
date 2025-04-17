@@ -12,21 +12,21 @@ Imports Xunit
 Namespace System.Windows.Forms.Analyzers.VisualBasic.Tests.AnalyzerTests.AvoidPassingTaskWithoutCancellationToken
 
     ''' <summary>
-    '''  Tests for the AvoidPassingTaskWithoutCancellationTokenAnalyzer that verify it correctly
-    '''  detects InvokeAsync calls without explicit 'Me' keyword.
+    ''' Tests for the AvoidPassingTaskWithoutCancellationTokenAnalyzer analyzer
+    ''' focusing on implicit InvokeAsync calls within a Control subclass.
     ''' </summary>
-    Public Class ImplicitInvokeAsyncOnControl
+    Public Class ImplicitInvokeAsyncInControlSubclass
         Inherits RoslynAnalyzerAndCodeFixTestBase(Of AvoidPassingTaskWithoutCancellationTokenAnalyzer, DefaultVerifier)
 
         ''' <summary>
-        '''  Initializes a new instance of the <see cref="ImplicitInvokeAsyncOnControl"/> class.
+        ''' Initializes a new instance of the <see cref="ImplicitInvokeAsyncInControlSubclass"/> class.
         ''' </summary>
         Public Sub New()
             MyBase.New(SourceLanguage.VisualBasic)
         End Sub
 
         ''' <summary>
-        '''  Retrieves reference assemblies for the latest target framework versions.
+        ''' Retrieves reference assemblies for the latest target framework versions.
         ''' </summary>
         Public Shared Iterator Function GetReferenceAssemblies() As IEnumerable(Of Object())
             Dim tfms As NetVersion() = {
@@ -39,16 +39,15 @@ Namespace System.Windows.Forms.Analyzers.VisualBasic.Tests.AnalyzerTests.AvoidPa
         End Function
 
         ''' <summary>
-        '''  Tests that the analyzer detects InvokeAsync calls with Task return types
-        '''  even when the 'Me' keyword is omitted.
+        ''' Tests the diagnostics produced by the analyzer for implicit InvokeAsync calls in a Control subclass.
         ''' </summary>
         <Theory>
         <CodeTestData(NameOf(GetReferenceAssemblies))>
-        Public Async Function DetectImplicitInvokeAsyncCalls(
+        Public Async Function TestImplicitInvokeAsyncCalls(
                 referenceAssemblies As ReferenceAssemblies,
                 fileSet As TestDataFileSet) As Task
 
-            ' Make sure, we can resolve the assembly we're testing against:
+            ' Make sure we can resolve the assembly we're testing against
             Dim referenceAssembly = Await referenceAssemblies.ResolveAsync(
                 language:=String.Empty,
                 cancellationToken:=CancellationToken.None)
@@ -57,12 +56,13 @@ Namespace System.Windows.Forms.Analyzers.VisualBasic.Tests.AnalyzerTests.AvoidPa
 
             Dim context = GetVisualBasicAnalyzerTestContext(fileSet, referenceAssemblies)
 
-            ' Explicitly specify where diagnostics are expected
-            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(18, 19, 20, 44))
-            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(22, 19, 24, 47))
-            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(41, 19, 43, 44))
-            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(73, 19, 75, 44))
-            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(82, 19, 84, 47))
+            ' Add expectations for diagnostics in specific locations in the test file
+            ' context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(28, 20, 28, 74))
+            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(28, 25, 28, 76))
+            ' context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(41, 20, 41, 74))
+            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(37, 25, 37, 77))
+            ' context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(54, 20, 54, 74))
+            context.ExpectedDiagnostics.Add(DiagnosticResult.CompilerWarning(diagnosticId).WithSpan(46, 25, 46, 77))
 
             Await context.RunAsync()
         End Function

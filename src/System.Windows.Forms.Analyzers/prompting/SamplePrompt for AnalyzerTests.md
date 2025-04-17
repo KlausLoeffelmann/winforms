@@ -1,17 +1,16 @@
-Can you please implement an additional Analyzer unit test according to 
-#file:'AnalyzerTests-Copilot-Instructions.md' for the 
-#class:'System.Windows.Forms.CSharp.Analyzers.MissingPropertySerializationConfiguration.MissingPropertySerializationConfigurationAnalyzer':436-4056 ? 
+Request a Bug Fix:
+------------------
 
-We need to a test class which tests that makes sure
-* No static Properties get flagged.
-* No properties get flagged in side of classes which are inherited/implemented based of 
-  `IComponent` alright, but not the `System.ComponentModel` versions.
-* No Properties with a private setting get flagged.
-* We have at least one test case, where we have an inherited property which has 
-  been correctly attributed, so, the overwritten one should or should not cause 
-  the Analyzer to trigger.
+Could you update the #AvoidPassingTaskWithoutCancellationToken analyzer so that, in both C# and VB, 
+it not only flags explicit `Control.InvokeAsync(...)` and `this.InvokeAsync(...)` (or `Me.InvokeAsync`), 
+but also implicit `InvokeAsync(...)` calls inside a WinForms Control subclass when no 
+CancellationToken is supplied? Please take the #Analyzer-Copilot-Instructions.md instructions for
+fixing bugs in analyzers into account.
 
-These four cases can be combined using one additional test class, and one additional 
-test data folder.
-
-This is for C#.
+Request Tests for the Bug Fix:
+--------------------------------------------------
+Could you add or update unit tests for the `AvoidPassingTaskWithoutCancellationToken` analyzer in C# and VB to 
+ensure it now flags plain InvokeAsync(...) without a `CancellationToken` inside a Control subclass, 
+while still ensuring the existing correct behavior of `Control.InvokeAsync(...)`, `this.InvokeAsync(...)`,
+`and Me.InvokeAsync(...)` remains unchanged? 
+Please take the #Analyzer-Copilot-Instructions.md instructions for writing tests into account.
