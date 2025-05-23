@@ -254,6 +254,7 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
         get
         {
             CreateParams cp = base.CreateParams;
+
             if (!OwnerDraw)
             {
                 // WS_EX_RIGHT overrides the BS_XXXX alignment styles
@@ -612,11 +613,19 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
         }
     }
 
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning disable WFO5001
     internal bool OwnerDraw =>
-        (FlatStyle != FlatStyle.System)
-        || Application.IsDarkModeEnabled;
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        // OK. Let's not break more than ABSOLUTEY necessary here.
+        // It was used to be `FlatStyle != FlatStyle.System;`
+        // We will need to update the Renderers to be compatible with Win11+
+        // both in Light- and DarkMode.
+        // For now, we will hijack the StandardRenderers _for DarkMode only_ and pass
+        // them down to the System _directly_ and we will not use the Adapters for that.
+        (Application.IsDarkModeEnabled
+         && GetStyle(ControlStyles.ApplyThemingImplicitly)
+         && FlatStyle == FlatStyle.Standard)
+        || (FlatStyle != FlatStyle.System);
+#pragma warning restore WFO5001
 
     bool? ICommandBindingTargetProvider.PreviousEnabledStatus { get; set; }
 
@@ -960,7 +969,11 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
         return LayoutUtils.UnionSizes(preferredSize + Padding.Size, MinimumSize);
     }
 
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning disable WFO5001
+    /// <summary>
+    ///  Returns an adapter for Rendering one of the FlatStyles. Note, that we ALWAYS render
+    ///  Buttons ourselves, except when the User explicitly requests FlatStyle.System rendering!
+    /// </summary>
     internal ButtonBaseAdapter Adapter
     {
         get
@@ -970,30 +983,32 @@ public abstract partial class ButtonBase : Control, ICommandBindingTargetProvide
             {
                 if (Application.IsDarkModeEnabled && this is Button)
                 {
+                    // For the Button, we use every aspect of our DarkMode adapter(s).
                     _adapter = CreateDarkModeAdapter();
-                }
-                else
-                {
-                    switch (FlatStyle)
-                    {
-                        case FlatStyle.Standard:
-                            _adapter = CreateStandardAdapter();
-                            break;
-                        case FlatStyle.Popup:
-                            _adapter = CreatePopupAdapter();
-                            break;
-                        case FlatStyle.Flat:
-                            _adapter = CreateFlatAdapter();
-                            break;
-                        default:
-                            Debug.Fail($"Unsupported FlatStyle: \"{FlatStyle}\"");
-                            break;
-                    }
-
                     _cachedAdapterType = FlatStyle;
+
+                    return _adapter;
                 }
+
+                switch (FlatStyle)
+                {
+                    case FlatStyle.Standard:
+                        _adapter = CreateStandardAdapter();
+                        break;
+                    case FlatStyle.Popup:
+                        _adapter = CreatePopupAdapter();
+                        break;
+                    case FlatStyle.Flat:
+                        _adapter = CreateFlatAdapter();
+                        break;
+                    default:
+                        Debug.Fail($"Unsupported FlatStyle: \"{FlatStyle}\"");
+                        break;
+                }
+
+                _cachedAdapterType = FlatStyle;
             }
-#pragma warning restore WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore WFO5001
 
             return _adapter;
         }
