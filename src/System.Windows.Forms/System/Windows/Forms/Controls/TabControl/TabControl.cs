@@ -72,7 +72,6 @@ public partial class TabControl : Control
     private bool _skipUpdateSize;
 
     private ToolTipBuffer _toolTipBuffer;
-    private bool _suspendDarkModeChange;
 
     /// <summary>
     ///  Constructs a TabBase object, usually as the base class for a TabStrip or TabControl.
@@ -84,9 +83,6 @@ public partial class TabControl : Control
 
         _tabCollection = new TabPageCollection(this);
         SetStyle(ControlStyles.UserPaint, false);
-#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        SetStyle(ControlStyles.ApplyThemingImplicitly, true);
-#pragma warning restore WFO5001
     }
 
     /// <summary>
@@ -159,9 +155,7 @@ public partial class TabControl : Control
 
                 _appearance = value;
 
-                _suspendDarkModeChange = true;
                 RecreateHandle();
-                ApplyDarkModeOnDemand();
 
                 // Fire OnStyleChanged(EventArgs.Empty) here since we are no longer calling UpdateStyles( ) but always reCreating the Handle.
                 OnStyleChanged(EventArgs.Empty);
@@ -274,6 +268,10 @@ public partial class TabControl : Control
     {
         get
         {
+#pragma warning disable WFO5001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            SetStyle(ControlStyles.ApplyThemingImplicitly, true);
+#pragma warning restore WFO5001
+
             CreateParams cp = base.CreateParams;
             cp.ClassName = PInvoke.WC_TABCONTROL;
 
@@ -1274,6 +1272,8 @@ public partial class TabControl : Control
             AddNativeTabPage(page);
         }
 
+        ApplyDarkModeOnDemand();
+
         // Resize the pages
         //
         ResizePages();
@@ -1294,20 +1294,21 @@ public partial class TabControl : Control
         }
 
         UpdateTabSelection(false);
-        ApplyDarkModeOnDemand();
     }
 
 #pragma warning disable WFO5001
     private void ApplyDarkModeOnDemand()
     {
         // We need to avoid to apply the DarkMode theme twice on handle recreate.
-        if (!_suspendDarkModeChange && Application.IsDarkModeEnabled)
+        if (Application.IsDarkModeEnabled)
         {
             PInvoke.SetWindowTheme(HWND, null, $"{DarkModeIdentifier}::{BannerContainerThemeIdentifier}");
             PInvokeCore.EnumChildWindows(this, StyleChildren);
         }
 
-        _suspendDarkModeChange = false;
+        static BOOL StyleChildren(HWND handle) =>
+            PInvoke.SetWindowTheme(handle, $"{DarkModeIdentifier}_{ExplorerThemeIdentifier}", null)
+            .Succeeded;
     }
 #pragma warning restore WFO5001
 
@@ -1791,10 +1792,6 @@ public partial class TabControl : Control
         return !_padding.Equals(s_defaultPaddingPoint);
     }
 
-    private BOOL StyleChildren(HWND handle) =>
-        PInvoke.SetWindowTheme(handle, $"{DarkModeIdentifier}_{ExplorerThemeIdentifier}", null)
-            .Succeeded;
-
     /// <summary>
     ///  Returns a string representation for this control.
     /// </summary>
@@ -2043,6 +2040,7 @@ public partial class TabControl : Control
 
         // Remove other TabBaseReLayout messages from the message queue
         MSG msg = default;
+
         while (PInvokeCore.PeekMessage(
             &msg,
             this,

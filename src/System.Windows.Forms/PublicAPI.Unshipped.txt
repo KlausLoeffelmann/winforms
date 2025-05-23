@@ -1,3 +1,5 @@
+override System.Windows.Forms.DataGridView.CreateParams.get -> System.Windows.Forms.CreateParams!
+override System.Windows.Forms.TabPage.CreateParams.get -> System.Windows.Forms.CreateParams!
 System.Windows.Forms.Form.FormScreenCaptureMode.get -> System.Windows.Forms.ScreenCaptureMode
 System.Windows.Forms.Form.FormScreenCaptureMode.set -> void
 System.Windows.Forms.ScreenCaptureMode
