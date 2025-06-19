@@ -7,6 +7,8 @@
 
 ## 1. Code Style and Quality Guidelines
 
+Principly: When ever you need to insert a new line, either in the context of refactoring or when generating new code, always make sure that you do not fill this line with any whitespaces. IMPORTANT: A new line always needs to be a really new line, without any additional white spaces or tabs!
+
 ### 1.1 C# Language Features and Modern Patterns
 
 - Use C# 13 features and patterns throughout the codebase. In particular, focus on these general issues:
@@ -60,7 +62,7 @@
         : GetDarkModeColor(SystemColors.GrayText);
     ```
 
-- - Prefer `switch` expression over switch statements over chains of `if` statements, where if makes sense:
+- Prefer `switch` expression over switch statements and over chains of `if` statements, where if makes sense:
 
   ```csharp
   // Prefer switch expressions over switch statements

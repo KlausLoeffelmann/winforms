@@ -27,7 +27,7 @@ internal class ToolStripActionList : DesignerActionList
     }
 
     /// <summary>
-    ///  False if were inherited and can't be modified.
+    /// False if were inherited and can't be modified.
     /// </summary>
     private bool CanAddItems
     {
@@ -43,10 +43,15 @@ internal class ToolStripActionList : DesignerActionList
         }
     }
 
-    private bool IsReadOnly =>
-        // Make sure the component is not being inherited -- we can't delete these!
-        !TypeDescriptorHelper.TryGetAttribute(_toolStrip, out InheritanceAttribute? ia)
-        || ia.InheritanceLevel == InheritanceLevel.InheritedReadOnly;
+    private bool IsReadOnly
+    {
+        get
+        {
+            // Make sure the component is not being inherited -- we can't delete these!
+            return !TypeDescriptorHelper.TryGetAttribute(_toolStrip, out InheritanceAttribute? ia)
+            || ia.InheritanceLevel == InheritanceLevel.InheritedReadOnly;
+        }
+    }
 
     // helper function to get the property on the actual Control
     private object? GetProperty(string propertyName)
@@ -81,7 +86,11 @@ internal class ToolStripActionList : DesignerActionList
 
     public DockStyle Dock
     {
-        get => (DockStyle)GetProperty(nameof(Dock))!;
+        get
+        {
+            return (DockStyle)GetProperty(nameof(Dock))!;
+        }
+
         set
         {
             if (value != Dock)
@@ -93,7 +102,11 @@ internal class ToolStripActionList : DesignerActionList
 
     public ToolStripRenderMode RenderMode
     {
-        get => (ToolStripRenderMode)GetProperty(nameof(RenderMode))!;
+        get
+        {
+            return (ToolStripRenderMode)GetProperty("RenderMode")!;
+        }
+
         set
         {
             if (value != RenderMode)
@@ -115,10 +128,42 @@ internal class ToolStripActionList : DesignerActionList
         }
     }
 
+    private string GetItemCategory(ToolStripItem? item)
+    {
+        if (item is null)
+        {
+            return "Unknown";
+        }
+        else if (item is ToolStripMenuItem menuItem && menuItem.DropDownItems.Count > 0)
+        {
+            return "MenuWithChildren";
+        }
+        else if (item is ToolStripMenuItem)
+        {
+            return "MenuItem";
+        }
+        else if (item is ToolStripButton button && button.Checked)
+        {
+            return "CheckedButton";
+        }
+        else if (item is ToolStripButton)
+        {
+            return "Button";
+        }
+        else if (item.Enabled is false)
+        {
+            return "Disabled";
+        }
+        else
+        {
+            return "Other";
+        }
+    }
+
     private void InvokeEmbedVerb()
     {
         // Hide the Panel.
-        DesignerActionUIService? actionUIService = (DesignerActionUIService?)_toolStrip.Site?.GetService(typeof(DesignerActionUIService));
+        var actionUIService = (DesignerActionUIService?)_toolStrip.Site?.GetService(typeof(DesignerActionUIService));
         actionUIService?.HideUI(_toolStrip);
         _changeParentVerb.ChangeParent();
     }
@@ -129,11 +174,11 @@ internal class ToolStripActionList : DesignerActionList
     }
 
     /// <summary>
-    ///  The Main method to group the ActionItems and pass it to the Panel.
+    /// The Main method to group the ActionItems and pass it to the Panel.
     /// </summary>
     public override DesignerActionItemCollection GetSortedActionItems()
     {
-        DesignerActionItemCollection items = [];
+        DesignerActionItemCollection items = new DesignerActionItemCollection();
         if (!IsReadOnly)
         {
             items.Add(new DesignerActionMethodItem(
