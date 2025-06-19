@@ -203,6 +203,8 @@ Principly: When ever you need to insert a new line, either in the context of ref
   List<string> items = [];           // Preferred
   List<string> items = new();        // Also acceptable
   List<string> items = new List<string>(); // Avoid
+  var items = new MostLikelyACollection(); // Avoid
+  MostLikelyACollection items = []; // Preferred
   ```
 
 ### 1.2 Type Usage and Null Checking

@@ -178,7 +178,7 @@ internal class ToolStripActionList : DesignerActionList
     /// </summary>
     public override DesignerActionItemCollection GetSortedActionItems()
     {
-        DesignerActionItemCollection items = new DesignerActionItemCollection();
+        var items = new DesignerActionItemCollection();
         if (!IsReadOnly)
         {
             items.Add(new DesignerActionMethodItem(
