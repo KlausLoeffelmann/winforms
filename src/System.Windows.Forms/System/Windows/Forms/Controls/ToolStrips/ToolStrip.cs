@@ -821,13 +821,15 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     {
         get
         {
-            return (LayoutStyle == ToolStripLayoutStyle.HorizontalStackWithOverflow) ? ToolStripGripDisplayStyle.Vertical
-                                                                 : ToolStripGripDisplayStyle.Horizontal;
+            return (LayoutStyle == ToolStripLayoutStyle.HorizontalStackWithOverflow)
+                ? ToolStripGripDisplayStyle.Vertical
+                : ToolStripGripDisplayStyle.Horizontal;
         }
     }
 
     /// <summary>
-    ///  The external spacing between the grip and the padding of the ToolStrip and the first item in the collection
+    ///  The external spacing between the grip and the padding
+    ///  of the ToolStrip and the first item in the collection
     /// </summary>
     [SRCategory(nameof(SR.CatLayout))]
     [SRDescription(nameof(SR.ToolStripGripDisplayStyleDescr))]
@@ -851,17 +853,16 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     {
         get
         {
-            return (GripStyle == ToolStripGripStyle.Visible) ? Grip.Bounds : Rectangle.Empty;
+            return (GripStyle == ToolStripGripStyle.Visible)
+                ? Grip.Bounds
+                : Rectangle.Empty;
         }
     }
 
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-    public new bool HasChildren
-    {
-        get => base.HasChildren;
-    }
+    public new bool HasChildren => base.HasChildren;
 
     internal bool HasVisibleItems
     {
@@ -897,39 +898,32 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public new HScrollProperties HorizontalScroll
-    {
-        get => base.HorizontalScroll;
-    }
+    public new HScrollProperties HorizontalScroll => base.HorizontalScroll;
 
     [DefaultValue(typeof(Size), "16,16")]
     [SRCategory(nameof(SR.CatAppearance))]
     [SRDescription(nameof(SR.ToolStripImageScalingSizeDescr))]
     public Size ImageScalingSize
     {
-        get
-        {
-            return ImageScalingSizeInternal;
-        }
-        set
-        {
-            ImageScalingSizeInternal = value;
-        }
+        get => ImageScalingSizeInternal;
+        set => ImageScalingSizeInternal = value;
     }
 
     internal virtual Size ImageScalingSizeInternal
     {
-        get
-        {
-            return _imageScalingSize;
-        }
+        get => _imageScalingSize;
         set
         {
             if (_imageScalingSize != value)
             {
                 _imageScalingSize = value;
 
-                LayoutTransaction.DoLayoutIf((Items.Count > 0), this, this, PropertyNames.ImageScalingSize);
+                LayoutTransaction.DoLayoutIf(
+                    condition: (Items.Count > 0),
+                    elementToLayout: this,
+                    elementCausingLayout: this,
+                    property: PropertyNames.ImageScalingSize);
+
                 foreach (ToolStripItem item in Items)
                 {
                     item.OnImageScalingSizeChanged(EventArgs.Empty);
@@ -939,7 +933,8 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     }
 
     /// <summary>
-    ///  Gets or sets the <see cref="Forms.ImageList"/> that contains the <see cref="Image"/> displayed on a label control.
+    ///  Gets or sets the <see cref="Forms.ImageList"/> that contains the
+    ///  <see cref="Image"/> displayed on a label control.
     /// </summary>
     [DefaultValue(null)]
     [SRCategory(nameof(SR.CatAppearance))]
@@ -984,22 +979,10 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     /// <summary>
     ///  Specifies whether the control is willing to process mnemonics when hosted in an container ActiveX (Ax Sourcing).
     /// </summary>
-    internal override bool IsMnemonicsListenerAxSourced
-    {
-        get
-        {
-            return true;
-        }
-    }
+    internal override bool IsMnemonicsListenerAxSourced => true;
 
     [MemberNotNullWhen(true, nameof(ToolStripPanelRow))]
-    internal bool IsInToolStripPanel
-    {
-        get
-        {
-            return ToolStripPanelRow is not null;
-        }
-    }
+    internal bool IsInToolStripPanel => ToolStripPanelRow is not null;
 
     /// <summary> indicates whether the user is currently
     ///  moving the toolstrip from one toolstrip container
@@ -1007,24 +990,12 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
     /// </summary>
     [Browsable(false)]
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public bool IsCurrentlyDragging
-    {
-        get
-        {
-            return GetToolStripState(STATE_DRAGGING);
-        }
-    }
+    public bool IsCurrentlyDragging => GetToolStripState(STATE_DRAGGING);
 
     /// <summary>
     ///  indicates if the SetBoundsCore is called thru Locationchanging.
     /// </summary>
-    private bool IsLocationChanging
-    {
-        get
-        {
-            return GetToolStripState(STATE_LOCATIONCHANGING);
-        }
-    }
+    private bool IsLocationChanging => GetToolStripState(STATE_LOCATIONCHANGING);
 
     /// <summary>
     ///  The items that belong to this ToolStrip.
@@ -2219,9 +2190,9 @@ public partial class ToolStrip : ScrollableControl, IArrangedElement, ISupportTo
             // winner is clearly closer than the angle winner.
 
             // [a.winner]                       |       [s]
-            //                                    |         [h.winner]
-            //       [h.winner]                   |
-            //     [s]                            |    [a.winner]
+            //                                  |         [h.winner]
+            //       [h.winner]                 |
+            //     [s]                          |    [a.winner]
             return hypotenuseWinner;
         }
 

@@ -58,13 +58,8 @@ public partial class StatusStrip : ToolStrip
         }
     }
 
-    protected override Size DefaultSize
-    {
-        get
-        {
-            return new Size(200, 22);
-        }
-    }
+    protected override Size DefaultSize =>
+        new Size(200, 22);
 
     protected override Padding DefaultPadding
     {
@@ -72,25 +67,23 @@ public partial class StatusStrip : ToolStrip
         {
             if (Orientation == Orientation.Horizontal)
             {
-                return RightToLeft == RightToLeft.No ? new Padding(1, 0, 14, 0) : new Padding(14, 0, 1, 0);
+                return RightToLeft == RightToLeft.No
+                    ? new Padding(1, 0, 14, 0)
+                    : new Padding(14, 0, 1, 0);
             }
             else
             {
                 // vertical
-                // the difference in symmetry here is that the grip does not actually rotate, it remains the same height it
-                // was before, so the DisplayRectangle needs to shrink up by its height.
+                // the difference in symmetry here is that the grip does not actually
+                // rotate, it remains the same height it was before, so the DisplayRectangle
+                // needs to shrink up by its height.
                 return new Padding(1, 3, 1, DefaultSize.Height);
             }
         }
     }
 
-    protected override DockStyle DefaultDock
-    {
-        get
-        {
-            return DockStyle.Bottom;
-        }
-    }
+    protected override DockStyle DefaultDock =>
+        DockStyle.Bottom;
 
     [DefaultValue(DockStyle.Bottom)]
     public override DockStyle Dock
@@ -176,10 +169,7 @@ public partial class StatusStrip : ToolStrip
     [SRDescription(nameof(SR.StatusStripSizingGripDescr))]
     public bool SizingGrip
     {
-        get
-        {
-            return _state[s_stateSizingGrip];
-        }
+        get => _state[s_stateSizingGrip];
         set
         {
             if (value != _state[s_stateSizingGrip])
@@ -215,6 +205,7 @@ public partial class StatusStrip : ToolStrip
                     y: statusStripSize.Height - scaledGripHeight,
                     width: scaleGripWidth,
                     height: scaledGripHeight)
+
                 : new Rectangle(
                     x: statusStripSize.Width - scaleGripWidth,
                     y: statusStripSize.Height - scaledGripHeight,
@@ -232,20 +223,17 @@ public partial class StatusStrip : ToolStrip
         set => base.Stretch = value;
     }
 
-    private TableLayoutSettings TableLayoutSettings
-    {
-        get { return (TableLayoutSettings)LayoutSettings!; }
-    }
+    private TableLayoutSettings TableLayoutSettings =>
+        (TableLayoutSettings)LayoutSettings!;
 
-    protected override AccessibleObject CreateAccessibilityInstance()
-    {
-        return new StatusStripAccessibleObject(this);
-    }
+    protected override AccessibleObject CreateAccessibilityInstance() =>
+        new StatusStripAccessibleObject(this);
 
-    protected internal override ToolStripItem CreateDefaultItem(string? text, Image? image, EventHandler? onClick)
-    {
-        return new ToolStripStatusLabel(text, image, onClick);
-    }
+    protected internal override ToolStripItem CreateDefaultItem(
+        string? text,
+        Image? image,
+        EventHandler? onClick) =>
+            new ToolStripStatusLabel(text, image, onClick);
 
     protected override void Dispose(bool disposing)
     {
@@ -264,6 +252,7 @@ public partial class StatusStrip : ToolStrip
         if (SizingGrip && RightToLeft == RightToLeft.Yes)
         {
             RTLGrip.Bounds = SizeGripBounds;
+
             if (!Controls.Contains(RTLGrip))
             {
                 if (Controls is ReadOnlyControlCollection controlCollection)
@@ -325,6 +314,7 @@ public partial class StatusStrip : ToolStrip
         bool inDisplayedItemCollection = false;
         ToolStripItem? item = levent.AffectedComponent as ToolStripItem;
         int itemCount = DisplayedItems.Count;
+
         if (item is not null)
         {
             inDisplayedItemCollection = DisplayedItems.Contains(item);
@@ -337,7 +327,9 @@ public partial class StatusStrip : ToolStrip
 
         base.OnLayout(levent);
 
-        if (itemCount != DisplayedItems.Count || (item is not null && (inDisplayedItemCollection != DisplayedItems.Contains(item))))
+        if (itemCount != DisplayedItems.Count
+            || (item is not null
+                && (inDisplayedItemCollection != DisplayedItems.Contains(item))))
         {
             // calling OnLayout has changed the displayed items collection
             // the SpringTableLayoutCore requires the count of displayed items to
@@ -353,15 +345,14 @@ public partial class StatusStrip : ToolStrip
         EnsureRightToLeftGrip();
     }
 
-    internal override void ResetRenderMode()
-    {
+    internal override void ResetRenderMode() =>
         RenderMode = ToolStripRenderMode.System;
-    }
 
     internal override bool ShouldSerializeRenderMode()
     {
         // We should NEVER serialize custom.
-        return (RenderMode is not ToolStripRenderMode.System and not ToolStripRenderMode.Custom);
+        return (RenderMode is not ToolStripRenderMode.System
+            and not ToolStripRenderMode.Custom);
     }
 
     internal override bool SupportsUiaProviders => true;
@@ -376,15 +367,17 @@ public partial class StatusStrip : ToolStrip
             noMansLand.X += ClientSize.Width + 1;
             noMansLand.Y += ClientSize.Height + 1;
             bool overflow = false;
+
             Rectangle lastItemBounds = Rectangle.Empty;
 
             ToolStripItem? lastItem = null;
+
             for (int i = 0; i < Items.Count; i++)
             {
                 ToolStripItem item = Items[i];
 
-                // using spring layout we can get into a situation where there's extra items which arent
-                // visible.
+                // using spring layout we can get into a situation where there's
+                // extra items which aren't visible.
                 if (overflow || ((IArrangedElement)item).ParticipatesInLayout)
                 {
                     if (overflow || (SizingGrip && item.Bounds.IntersectsWith(SizeGripBounds)))
@@ -480,7 +473,7 @@ public partial class StatusStrip : ToolStrip
 
                     // spring is achieved by using 100% as the column style
                     ColumnStyle colStyle = TableLayoutSettings.ColumnStyles[i];
-                    colStyle.Width = 100; // this width is ignored in AutoSize.
+                    colStyle.Width = 99.9F; // this width is ignored in AutoSize.
                     colStyle.SizeType = (spring) ? SizeType.Percent : SizeType.AutoSize;
                 }
 
@@ -494,7 +487,9 @@ public partial class StatusStrip : ToolStrip
 
                 TableLayoutSettings.RowStyles[0].SizeType = SizeType.Absolute;
                 TableLayoutSettings.RowStyles[0].Height = Math.Max(0, DisplayRectangle.Height);
-                TableLayoutSettings.ColumnCount = DisplayedItems.Count + 1; // add an extra cell so it fills the remaining space
+
+                // add an extra cell so it fills the remaining space
+                TableLayoutSettings.ColumnCount = DisplayedItems.Count + 1;
 
                 // don't remove the extra column styles, just set them back to autosize.
                 for (int i = DisplayedItems.Count; i < TableLayoutSettings.ColumnStyles.Count; i++)
@@ -507,7 +502,6 @@ public partial class StatusStrip : ToolStrip
                 //
                 // Vertical layout
                 //
-
                 TableLayoutSettings.GrowStyle = TableLayoutPanelGrowStyle.AddRows;
 
                 int originalRowCount = TableLayoutSettings.RowStyles.Count;
