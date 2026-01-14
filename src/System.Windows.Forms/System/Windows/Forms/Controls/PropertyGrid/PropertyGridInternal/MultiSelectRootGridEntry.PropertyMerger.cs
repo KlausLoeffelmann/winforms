@@ -51,10 +51,10 @@ internal partial class MultiSelectRootGridEntry
                         return null;
                     }
 
-                    // Handle typed arrays that don't support Span<T> covariance.
-                    // When objects is a typed array (e.g., ItemTypeDescriptor[]), AsSpan() throws
-                    // ArrayTypeMismatchException because Span<T> enforces exact type matching.
-                    // Solution: Create intermediate object?[] arrays to enable proper type covariance.
+                    // Note: DO NOT use AsSpan here for micro-optimization purposes!
+                    // Objects themselves may be a covariant array, which lead to crashes in this context.
+                    // Reason: e.g., Control[] assigned to object[]), which then causes 
+                    // ArrayTypeMismatchException with Span<T>'s invariance requirements.
                     List<PropertyDescriptor[]>? properties = null;
                     if (objects.Length > 1)
                     {
