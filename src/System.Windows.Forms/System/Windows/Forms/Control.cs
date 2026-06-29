@@ -2180,6 +2180,10 @@ public unsafe partial class Control :
             CommonProperties.xSetPreferredSizeCache(this, preferredSize);
         }
 
+#if PERFANALYZE
+        Diagnostics.PerfAnalyzeLog.Record(this, proposedSize, preferredSize);
+#endif
+
         return preferredSize;
     }
 

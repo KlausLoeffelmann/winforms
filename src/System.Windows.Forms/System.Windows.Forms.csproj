@@ -43,6 +43,18 @@
     <PackageReference Include="System.Windows.Extensions" />
   </ItemGroup>
 
+  <!-- PERFANALYZE: opt-in layout/measure tracing to a daily SQLite log. Never enabled in shipping builds.
+       Enable via './build /p:PerfAnalyze=true' or by setting the WINFORMS_PERFANALYZE=1 environment variable. -->
+  <PropertyGroup Condition="'$(PerfAnalyze)' == '' AND '$(WINFORMS_PERFANALYZE)' != ''">
+    <PerfAnalyze>true</PerfAnalyze>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(PerfAnalyze)' == 'true'">
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(PerfAnalyze)' == 'true'">
+    <DefineConstants>$(DefineConstants);PERFANALYZE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="..\Common\src\Obsoletions.cs" Link="Common\Obsoletions.cs" />
     <Compile Include="..\Common\src\RTLAwareMessageBox.cs" Link="Common\RTLAwareMessageBox.cs" />

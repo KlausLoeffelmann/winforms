@@ -88,6 +88,18 @@ eng\common\Build.ps1 -NativeToolsOnMachine -restore -build -bl
 
 ---
 
+## 2a  Opt-in flags (passed through to MSBuild)
+
+Arcade's `build.cmd -?` lists only common switches and notes that *"command line
+arguments not listed above are passed thru to msbuild."* The following repo-specific
+MSBuild properties ride that pass-through:
+
+| Property | How to enable | Effect |
+|----------|---------------|--------|
+| `PerfAnalyze` | `.\build.cmd /p:PerfAnalyze=true` (or env var `WINFORMS_PERFANALYZE=1`) | Defines `PERFANALYZE`, references `Microsoft.Data.Sqlite`, and traces every `Control.GetPreferredSize` to a daily SQLite log at `%AppData%\.WinFormsRuntime\perfanalyze-yyyy-MM-dd.db`. Dev/perf branches only; excluded from normal builds. |
+
+---
+
 ## 3  Optimized Building a Single Project (fast inner-loop)
 
 Prefer rebuilding just the project(s) with recent changes by using the
