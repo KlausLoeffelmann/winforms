@@ -93,16 +93,8 @@ internal sealed class AnimatedToggleSwitchRenderer : AnimatedControlRenderer
             return;
         }
 
-        if (IsSwitchOnRight(RtlTranslatedCheckAlign))
-        {
-            RenderSwitch(graphics, switchBounds, metrics);
-            RenderText(graphics, textBounds);
-        }
-        else
-        {
-            RenderSwitch(graphics, switchBounds, metrics);
-            RenderText(graphics, textBounds);
-        }
+        RenderSwitch(graphics, switchBounds, metrics);
+        RenderText(graphics, textBounds);
 
         if (Control.Focused && ShowFocusCues)
         {
