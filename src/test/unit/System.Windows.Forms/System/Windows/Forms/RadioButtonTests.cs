@@ -220,6 +220,7 @@ public class RadioButtonTests : AbstractButtonBaseTests
         using RadioButton control = new()
         {
             BackColor = Color.Red,
+            UseVisualStyleBackColor = true,
             Checked = isChecked,
             Size = new Size(40, 24),
             VisualStylesMode = VisualStylesMode.Net11
@@ -264,6 +265,31 @@ public class RadioButtonTests : AbstractButtonBaseTests
         {
             Assert.Equal(0, bitmap.GetPixel(bitmap.Width - 1, y).A);
         }
+    }
+
+    [WinFormsFact]
+    public void RadioButton_ModernGlyph_UsesExplicitBackColorWhenVisualStyleBackgroundDisabled()
+    {
+        using Panel parent = new() { BackColor = Color.White };
+        using RadioButton control = new()
+        {
+            BackColor = Color.Aqua,
+            Checked = false,
+            Text = string.Empty,
+            Size = new Size(40, 24),
+            VisualStylesMode = VisualStylesMode.Net11
+        };
+
+        parent.Controls.Add(control);
+
+        using Bitmap bitmap = new(control.Width, control.Height);
+        using Graphics graphics = Graphics.FromImage(bitmap);
+        PaintEventArgs e = new(graphics, control.ClientRectangle);
+
+        control.CreateStandardAdapter().PaintUp(e, CheckState.Unchecked);
+
+        Color backgroundPixel = bitmap.GetPixel(control.Width - 2, control.Height / 2);
+        Assert.Equal(Color.Aqua.ToArgb(), backgroundPixel.ToArgb());
     }
 
     [WinFormsFact]
