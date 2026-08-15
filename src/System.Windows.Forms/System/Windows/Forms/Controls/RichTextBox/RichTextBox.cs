@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Specialized;
@@ -333,7 +333,7 @@ public partial class RichTextBox : TextBoxBase
     ///  <see cref="ReservesNativeNonClientArea"/>). Return the configured reservation for preferred-size
     ///  measurement; the native client-area calculation explicitly excludes it.
     /// </summary>
-    private protected override Padding GetScrollBarPadding()
+    protected override Padding GetScrollBarPadding()
     {
         Padding padding = Padding.Empty;
 
@@ -452,12 +452,12 @@ public partial class RichTextBox : TextBoxBase
         }
     }
 
-    internal override Size GetPreferredSizeCore(Size proposedConstraints)
+    protected override Size GetPreferredSizeCoreOverride(Size proposedConstraints)
     {
         if (EffectiveVisualStylesMode >= VisualStylesMode.Net11)
         {
             // TextBoxBase owns the modern inset, user Padding, and scrollbar geometry.
-            return base.GetPreferredSizeCore(proposedConstraints);
+            return base.GetPreferredSizeCoreOverride(proposedConstraints);
         }
 
         Size scrollBarPadding = Size.Empty;
@@ -476,7 +476,7 @@ public partial class RichTextBox : TextBoxBase
         // Subtract the scroll bar padding before measuring
         proposedConstraints -= scrollBarPadding;
 
-        Size prefSize = base.GetPreferredSizeCore(proposedConstraints);
+        Size prefSize = base.GetPreferredSizeCoreOverride(proposedConstraints);
 
         return prefSize + scrollBarPadding;
     }

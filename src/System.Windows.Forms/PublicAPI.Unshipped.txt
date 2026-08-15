@@ -133,3 +133,9 @@ System.Windows.Forms.KioskModeManager.ToggleFullScreenKeys.get -> System.Windows
 System.Windows.Forms.KioskModeManager.ToggleFullScreenKeys.set -> void
 System.Windows.Forms.KioskModeManager.TopMostInFullScreen.get -> bool
 System.Windows.Forms.KioskModeManager.TopMostInFullScreen.set -> void
+
+override System.Windows.Forms.TextBox.GetScrollBarPadding() -> System.Windows.Forms.Padding
+override System.Windows.Forms.TextBox.GetPreferredSizeCoreOverride(System.Drawing.Size proposedConstraints) -> System.Drawing.Size
+override System.Windows.Forms.RichTextBox.GetScrollBarPadding() -> System.Windows.Forms.Padding
+override System.Windows.Forms.RichTextBox.GetPreferredSizeCoreOverride(System.Drawing.Size proposedConstraints) -> System.Drawing.Size
+override System.Windows.Forms.MaskedTextBox.GetPreferredSizeCoreOverride(System.Drawing.Size proposedConstraints) -> System.Drawing.Size

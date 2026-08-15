@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.ComponentModel;
@@ -392,13 +392,13 @@ public partial class TextBox : TextBoxBase
 
     internal override bool SupportsUiaProviders => true;
 
-    internal override Size GetPreferredSizeCore(Size proposedConstraints)
+    protected override Size GetPreferredSizeCoreOverride(Size proposedConstraints)
     {
         if (EffectiveVisualStylesMode >= VisualStylesMode.Net11)
         {
             // TextBoxBase already includes the native scrollbar reservation in the modern geometry.
             // Applying the legacy adjustment here would count each scrollbar twice.
-            return base.GetPreferredSizeCore(proposedConstraints);
+            return base.GetPreferredSizeCoreOverride(proposedConstraints);
         }
 
         Size scrollBarPadding = Size.Empty;
@@ -416,12 +416,12 @@ public partial class TextBox : TextBoxBase
         // Subtract the scroll bar padding before measuring
         proposedConstraints -= scrollBarPadding;
 
-        Size prefSize = base.GetPreferredSizeCore(proposedConstraints);
+        Size prefSize = base.GetPreferredSizeCoreOverride(proposedConstraints);
 
         return prefSize + scrollBarPadding;
     }
 
-    private protected override Padding GetScrollBarPadding()
+    protected override Padding GetScrollBarPadding()
     {
         if (IsHandleCreated)
         {

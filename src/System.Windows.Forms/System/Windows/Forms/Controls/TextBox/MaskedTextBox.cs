@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Specialized;
@@ -1745,14 +1745,14 @@ public partial class MaskedTextBox : TextBoxBase
     ///  Need to override this method so when get_Text is called we return the text that is actually
     ///  painted in the control so measuring text works on the actual text and not the formatted one.
     /// </summary>
-    internal override Size GetPreferredSizeCore(Size proposedConstraints)
+    protected override Size GetPreferredSizeCoreOverride(Size proposedConstraints)
     {
         Size size;
 
         _flagState[s_queryBaseText] = true;
         try
         {
-            size = base.GetPreferredSizeCore(proposedConstraints);
+            size = base.GetPreferredSizeCoreOverride(proposedConstraints);
         }
         finally
         {

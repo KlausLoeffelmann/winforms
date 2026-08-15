@@ -28,7 +28,7 @@ public abstract partial class UpDownBase
             }
         }
 
-        private protected override void OnNcPaint(Graphics graphics, HDC windowHdc)
+        protected override void OnNcPaint(Graphics graphics, nint windowHdc)
         {
         }
 

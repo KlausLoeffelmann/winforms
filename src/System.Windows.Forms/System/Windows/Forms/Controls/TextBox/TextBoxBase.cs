@@ -873,7 +873,7 @@ public abstract partial class TextBoxBase : Control
     ///  Returns the preferred height for modern Visual Styles, taking the carved padding band
     ///  (including the live scrollbar allowance and the user <see cref="Padding"/>) into account.
     /// </summary>
-    private protected virtual int PreferredHeightCore
+    protected virtual int PreferredHeightCore
     {
         get
         {
@@ -934,7 +934,7 @@ public abstract partial class TextBoxBase : Control
     ///  user-provided <see cref="Padding"/>, and scrollbar reservation are each added once.
     ///  </para>
     /// </remarks>
-    private protected Padding GetVisualStylesPadding(bool includeScrollbars)
+    protected virtual Padding GetVisualStylesPadding(bool includeScrollbars)
     {
         SystemVisualSettings settings = Application.SystemVisualSettings;
         Padding padding = ModernControlVisualStyles.GetFieldPadding(
@@ -1009,7 +1009,7 @@ public abstract partial class TextBoxBase : Control
     ///  Returns the additional padding required to clear the live scrollbars,
     ///  if any are currently shown.
     /// </summary>
-    private protected virtual Padding GetScrollBarPadding()
+    protected virtual Padding GetScrollBarPadding()
     {
         Padding padding = Padding.Empty;
 
@@ -1057,6 +1057,10 @@ public abstract partial class TextBoxBase : Control
     ///  </para>
     /// </remarks>
     internal override Size GetPreferredSizeCore(Size proposedConstraints)
+        => GetPreferredSizeCoreOverride(proposedConstraints);
+
+    /// <inheritdoc cref="GetPreferredSizeCore(Size)"/>
+    protected virtual Size GetPreferredSizeCoreOverride(Size proposedConstraints)
     {
         // 3px vertical space is required between the text and the border to keep the last
         // line from being clipped.
@@ -1457,7 +1461,7 @@ public abstract partial class TextBoxBase : Control
     ///  Adjusts the height of a single-line edit control to match the height of
     ///  the control's font.
     /// </summary>
-    private void AdjustHeight(bool returnIfAnchored)
+    protected virtual void AdjustHeight(bool returnIfAnchored)
     {
         // If we're anchored to two opposite sides of the form, don't adjust the size because
         // we'll lose our anchored size by resetting to the requested width.
@@ -2404,7 +2408,7 @@ public abstract partial class TextBoxBase : Control
 
     internal override HBRUSH InitializeDCForWmCtlColor(HDC dc, MessageId msg)
     {
-        InitializeClientArea(dc, (HWND)Handle);
+        InitializeClientArea((nint)dc.Value, Handle);
 
         if (msg == PInvokeCore.WM_CTLCOLORSTATIC && !ShouldSerializeBackColor())
         {
@@ -2430,7 +2434,9 @@ public abstract partial class TextBoxBase : Control
     ///   reset on handle recreation in <see cref="CreateHandle"/>.
     ///  </para>
     /// </remarks>
-    private protected virtual unsafe void InitializeClientArea(HDC hDC, HWND hwnd)
+    /// <param name="hdc">The device context handle provided by the originating <c>WM_CTLCOLOR*</c> message.</param>
+    /// <param name="hwnd">The window handle of this control.</param>
+    protected virtual unsafe void InitializeClientArea(nint hdc, nint hwnd)
     {
         if (EffectiveVisualStylesMode < VisualStylesMode.Net11
             || _triggerNewClientSizeRequest)
@@ -2446,7 +2452,7 @@ public abstract partial class TextBoxBase : Control
     ///  Styles padding band from the client area. Safe to call repeatedly; it re-carves against the
     ///  current <see cref="Padding"/> and scrollbar state.
     /// </summary>
-    private protected void RecalculateVisualStylesClientArea()
+    protected virtual void RecalculateVisualStylesClientArea()
     {
         if (!IsHandleCreated || EffectiveVisualStylesMode < VisualStylesMode.Net11)
         {
@@ -2487,7 +2493,7 @@ public abstract partial class TextBoxBase : Control
     ///  Handles <c>WM_NCCALCSIZE</c> by carving the modern Visual Styles padding band from the client
     ///  rectangle. The carve is floored so the client rectangle can never invert.
     /// </summary>
-    private unsafe void WmNcCalcSize(ref Message m)
+    protected virtual unsafe void WmNcCalcSize(ref Message m)
     {
         // Make sure we actually kicked this off.
         if (_triggerNewClientSizeRequest)
@@ -2563,7 +2569,7 @@ public abstract partial class TextBoxBase : Control
 
         // A non-client update region (in screen coordinates, as WM_NCPAINT requires) that excludes the
         // client rectangle. Handing this to the default handler keeps it from overpainting the client.
-        using RegionScope nonClientRegion = CreateNonClientClipRegion();
+        using Region? nonClientRegion = CreateNonClientClipRegion();
         WPARAM originalWParam = m.WParamInternal;
 
         HDC hdc = PInvokeCore.GetWindowDC(hwnd);
@@ -2572,11 +2578,18 @@ public abstract partial class TextBoxBase : Control
         // finally. Do not "tidy" the DC into a single using - that would be a regression.
         using Graphics graphics = Graphics.FromHdc(hdc);
 
+        nint nonClientHrgn = 0;
+
         try
         {
-            if (!nonClientRegion.IsNull)
+            if (nonClientRegion is not null)
             {
-                m.WParamInternal = (WPARAM)(nuint)(nint)nonClientRegion.Region;
+                nonClientHrgn = nonClientRegion.GetHrgn(graphics);
+
+                if (nonClientHrgn != 0)
+                {
+                    m.WParamInternal = (WPARAM)(nuint)nonClientHrgn;
+                }
             }
 
             base.WndProc(ref m);
@@ -2584,10 +2597,15 @@ public abstract partial class TextBoxBase : Control
             // Restore the original wParam so nothing downstream observes our temporary clip region.
             m.WParamInternal = originalWParam;
 
-            OnNcPaint(graphics, hdc);
+            OnNcPaint(graphics, (nint)hdc.Value);
         }
         finally
         {
+            if (nonClientHrgn != 0)
+            {
+                nonClientRegion!.ReleaseHrgn(nonClientHrgn);
+            }
+
             int result = PInvokeCore.ReleaseDC(hwnd, hdc);
             Debug.Assert(result != 0);
         }
@@ -2611,7 +2629,7 @@ public abstract partial class TextBoxBase : Control
         }
 
         using Graphics graphics = Graphics.FromHdc(hdc);
-        OnNcPaint(graphics, hdc);
+        OnNcPaint(graphics, (nint)hdc.Value);
     }
 
     /// <summary>
@@ -2620,13 +2638,13 @@ public abstract partial class TextBoxBase : Control
     ///  it cannot overpaint (erase) the client area of scrollbar-bearing edit controls.
     /// </summary>
     /// <returns>
-    ///  The non-client region scope, or a null scope when the window rectangle cannot be retrieved.
+    ///  The non-client region, or <see langword="null"/> when the window rectangle cannot be retrieved.
     /// </returns>
-    private RegionScope CreateNonClientClipRegion()
+    protected virtual Region? CreateNonClientClipRegion()
     {
         if (!PInvokeCore.GetWindowRect(this, out RECT windowRect))
         {
-            return new RegionScope(HRGN.Null);
+            return null;
         }
 
         PInvokeCore.GetClientRect(this, out RECT clientRect);
@@ -2634,7 +2652,7 @@ public abstract partial class TextBoxBase : Control
         Point clientTopLeft = default;
         PInvoke.ClientToScreen(this, ref clientTopLeft);
 
-        RegionScope nonClientRegion = new(windowRect.left, windowRect.top, windowRect.right, windowRect.bottom);
+        using RegionScope nonClientRegion = new(windowRect.left, windowRect.top, windowRect.right, windowRect.bottom);
 
         using RegionScope clientRegion = new(
             clientTopLeft.X,
@@ -2645,18 +2663,18 @@ public abstract partial class TextBoxBase : Control
         if (PInvokeCore.CombineRgn(nonClientRegion.Region, nonClientRegion.Region, clientRegion.Region, RGN_COMBINE_MODE.RGN_DIFF)
             == GDI_REGION_TYPE.RGN_ERROR)
         {
-            nonClientRegion.Dispose();
-            return new RegionScope(HRGN.Null);
+            return null;
         }
 
-        return nonClientRegion;
+        // Region.FromHrgn copies the GDI region, so the scope can be released safely.
+        return Region.FromHrgn((nint)nonClientRegion.Region.Value);
     }
 
     /// <summary>
     ///  Paints the modern Visual Styles non-client chrome (border, rounded <see cref="BorderStyle.Fixed3D"/>
     ///  lozenge, focus indicator) into a shared offscreen buffer and blits it to the supplied window DC.
     /// </summary>
-    private protected virtual void OnNcPaint(Graphics graphics, HDC windowHdc)
+    protected virtual void OnNcPaint(Graphics graphics, nint windowHdc)
     {
         int cornerRadius = ScaleVisualStylesMetric(ModernControlVisualStyles.FieldCornerRadius);
         Size focusBorderMetrics = GetVisualStylesFocusBorderMetrics();
@@ -2812,7 +2830,7 @@ public abstract partial class TextBoxBase : Control
                 if (band.Width > 0 && band.Height > 0)
                 {
                     PInvokeCore.BitBlt(
-                        hdc: windowHdc,
+                        hdc: (HDC)windowHdc,
                         x: band.X,
                         y: band.Y,
                         cx: band.Width,
@@ -2945,7 +2963,7 @@ public abstract partial class TextBoxBase : Control
         }
     }
 
-    private Rectangle GetNativeClientRectangle()
+    protected virtual Rectangle GetNativeClientRectangle()
     {
         if (!IsHandleCreated
             || !PInvokeCore.GetWindowRect(this, out RECT windowRect))
