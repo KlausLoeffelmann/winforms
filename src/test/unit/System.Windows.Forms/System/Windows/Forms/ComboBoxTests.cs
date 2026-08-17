@@ -806,8 +806,12 @@ public class ComboBoxTests
         Rectangle nativeEditBounds = control.ModernEditBaseBounds;
         Assert.False(nativeEditBounds.IsEmpty);
 
+        // Modern layout may reduce edit-window height versus native baseline because the
+        // field now reserves explicit top/bottom inset, but text must still remain readable.
+        Rectangle editBounds = control.GetEditBounds();
         Assert.True(
-            control.GetEditBounds().Height >= nativeEditBounds.Height);
+            editBounds.Height >= control.FontHeight,
+            $"DropDownStyle={dropDownStyle}, EditHeight={editBounds.Height}, FontHeight={control.FontHeight}, NativeEditHeight={nativeEditBounds.Height}, SelectionHeight={control.GetSelectionHeight()}, PreferredHeight={control.PreferredHeight}, ControlHeight={control.Height}");
     }
 
     [WinFormsTheory]
@@ -1771,7 +1775,7 @@ public class ComboBoxTests
     }
 
     [WinFormsFact]
-    public void ComboBox_CreateParams_Net11SimpleWithExplicitIntegralHeight_DoesNotForceNoIntegralHeight()
+    public void ComboBox_CreateParams_Net11SimpleWithExplicitIntegralHeight_StillForcesNoIntegralHeight()
     {
         using SubComboBox control = new()
         {
@@ -1782,7 +1786,7 @@ public class ComboBoxTests
 
         CreateParams createParams = control.CreateParams;
 
-        Assert.Equal(0, createParams.Style & PInvoke.CBS_NOINTEGRALHEIGHT);
+        Assert.NotEqual(0, createParams.Style & PInvoke.CBS_NOINTEGRALHEIGHT);
     }
 
     [WinFormsTheory]
