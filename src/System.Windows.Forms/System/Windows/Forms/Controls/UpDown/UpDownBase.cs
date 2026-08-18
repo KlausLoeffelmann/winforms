@@ -1113,7 +1113,7 @@ public abstract partial class UpDownBase : ContainerControl
         }
 
         int cornerRadius = LogicalToDeviceUnits(ModernControlVisualStyles.UpDownCornerRadius);
-        int borderThickness = LogicalToDeviceUnits(ModernControlVisualStyles.BorderThickness);
+        int borderThickness = ModernControlVisualStyles.GetRoundedChromeBorderThickness(DeviceDpiInternal);
 
         Color parentBackColor = Parent?.BackColor ?? BackColor;
         Color clientBackColor = BackColor;
