@@ -124,7 +124,7 @@ internal sealed class CheckBoxModernAdapter : CheckBoxBaseAdapter
 
         PaintImage(e, layout);
 
-        Color preferredTextColor = Control.ShouldSerializeForeColor()
+        Color preferredTextColor = Control.ForeColor != Forms.Control.DefaultForeColor
             ? Control.ForeColor
             : Application.IsDarkModeEnabled
                 ? Color.FromArgb(0xF0, 0xF0, 0xF0)

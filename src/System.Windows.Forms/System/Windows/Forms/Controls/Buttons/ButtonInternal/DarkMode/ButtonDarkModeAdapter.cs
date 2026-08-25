@@ -54,9 +54,7 @@ internal class ButtonDarkModeAdapter : ButtonBaseAdapter
                 backColor);
         }
 
-        bool useEffectiveForeColor = _modern
-            ? Control.ShouldSerializeForeColor()
-            : Control.ForeColor != Forms.Control.DefaultForeColor;
+        bool useEffectiveForeColor = Control.ForeColor != Forms.Control.DefaultForeColor;
 
         if (useEffectiveForeColor)
         {
