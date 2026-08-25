@@ -26,7 +26,7 @@ this repository. For modernizing or refactoring *existing* files, see the
 
 ## Language Version
 
-Use **C# 14** features and patterns. Key features to prefer:
+Use **C# 15** features and patterns. Key features to prefer:
 
 | Feature | Example |
 |---|---|
@@ -44,6 +44,7 @@ Use **C# 14** features and patterns. Key features to prefer:
   `using` directives unless the import is non-obvious.
 * **Nullable Reference Types** are enabled — annotate all new code accordingly.
 * Use **file-scoped namespace** declarations.
+* Avoid `this.` unless necessary for disambiguation or extension method calls.
 
 ## Type Usage and `var` Policy
 
@@ -197,6 +198,11 @@ Control CreateErrorControlForMessage(string message)
 
 ## Formatting and Line Length
 
+### Wrapping operators
+
+* **Wrap operators** into the next line, don't leave them at the end of the previous line,
+  when breaking long expressions.
+
 ### Expression-bodied members
 
 Use expression bodies (`=>`) for single-expression methods and read-only
@@ -227,6 +233,39 @@ internal string QualifiedName
   **before `return` statements**.
 * If a comment precedes a line that needs an empty line above it, the empty line
   goes **before the comment**.
+
+Examples:
+
+DON'T:
+```csharp
+{
+    int result = SomeMethod();
+    if (condition)
+    {
+        DoSomething();
+    }
+
+    MethodCall1();
+    MethodCall2();
+    return result;
+}
+
+INSTEAD DO:
+```csharp
+{
+    int result = SomeMethod();
+
+    if (condition)
+    {
+        DoSomething();
+    }
+
+    MethodCall1();
+    MethodCall2();
+
+    return result;
+}
+```
 
 ### Ternary operator
 
@@ -406,6 +445,8 @@ Use `EventArgs.Empty` for parameterless event raises.
 * Mark designer-generated controls as nullable:
   `private Button? _okButton;`
 * Dispose components with `is not null`:
+
+**IMPORTANT:** No NRTs in WinForms Designer-generated code!
 
 ```csharp
 protected override void Dispose(bool disposing)

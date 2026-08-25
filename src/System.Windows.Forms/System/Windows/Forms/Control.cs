@@ -11301,14 +11301,33 @@ public unsafe partial class Control :
     internal virtual bool ShouldSerializeBackColor()
     {
         Color backColor = Properties.GetValueOrDefault<Color>(s_backColorProperty);
-        return !backColor.IsEmpty;
+        if (backColor.IsEmpty)
+        {
+            return false;
+        }
+
+        Color ambient = ParentInternal is { } parent && parent.CanAccessProperties
+            ? parent.BackColor
+            : (IsActiveX ? ActiveXAmbientBackColor : AmbientPropertiesService?.BackColor ?? DefaultBackColor);
+
+        return !backColor.Equals(ambient);
     }
 
     /// <summary>
     ///  Returns true if the cursor should be persisted in code gen.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal virtual bool ShouldSerializeCursor() => Properties.ContainsKey(s_cursorProperty);
+    internal virtual bool ShouldSerializeCursor()
+    {
+        Cursor? cursor = Properties.GetValueOrDefault<Cursor?>(s_cursorProperty);
+        if (cursor is null)
+        {
+            return false;
+        }
+
+        Cursor ambient = ParentInternal is { } parent ? parent.Cursor : AmbientPropertiesService?.Cursor ?? DefaultCursor;
+        return !cursor.Equals(ambient);
+    }
 
     /// <summary>
     ///  Returns true if the enabled property should be persisted in code gen.
@@ -11320,13 +11339,39 @@ public unsafe partial class Control :
     ///  Returns true if the foreColor should be persisted in code gen.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal virtual bool ShouldSerializeForeColor() => !Properties.GetValueOrDefault<Color>(s_foreColorProperty).IsEmpty;
+    internal virtual bool ShouldSerializeForeColor()
+    {
+        Color foreColor = Properties.GetValueOrDefault<Color>(s_foreColorProperty);
+        if (foreColor.IsEmpty)
+        {
+            return false;
+        }
+
+        Color ambient = ParentInternal is { } parent && parent.CanAccessProperties
+            ? parent.ForeColor
+            : (IsActiveX ? ActiveXAmbientForeColor : AmbientPropertiesService?.ForeColor ?? DefaultForeColor);
+
+        return !foreColor.Equals(ambient);
+    }
 
     /// <summary>
     ///  Returns true if the font should be persisted in code gen.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal virtual bool ShouldSerializeFont() => Properties.ContainsKey(s_fontProperty);
+    internal virtual bool ShouldSerializeFont()
+    {
+        Font? font = Properties.GetValueOrDefault<Font?>(s_fontProperty);
+        if (font is null)
+        {
+            return false;
+        }
+
+        Font ambient = ParentInternal is { } parent && parent.CanAccessProperties
+            ? parent.Font
+            : AmbientPropertiesService?.Font ?? DefaultFont;
+
+        return !font.Equals(ambient);
+    }
 
     /// <summary>
     ///  Returns true if the RightToLeft should be persisted in code gen.

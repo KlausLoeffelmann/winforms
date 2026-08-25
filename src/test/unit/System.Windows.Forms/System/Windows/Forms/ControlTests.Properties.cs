@@ -11056,6 +11056,40 @@ public partial class ControlTests
         Assert.Equal(0, fontChangedCallCount);
     }
 
+    [WinFormsFact]
+    public void Control_ShouldSerializeAmbientProperties_WhenEqualToInheritedValue_ReturnsFalse()
+    {
+        using Form form = new()
+        {
+            BackColor = Color.Red,
+            Cursor = Cursors.Hand,
+            ForeColor = Color.Blue,
+            Font = new Font("Arial", 12f)
+        };
+        using Control child = new();
+
+        form.Controls.Add(child);
+        child.BackColor = form.BackColor;
+        child.Cursor = form.Cursor;
+        child.ForeColor = form.ForeColor;
+        child.Font = form.Font;
+
+        Assert.False(child.TestAccessor.Dynamic.ShouldSerializeBackColor());
+        Assert.False(child.TestAccessor.Dynamic.ShouldSerializeCursor());
+        Assert.False(child.TestAccessor.Dynamic.ShouldSerializeForeColor());
+        Assert.False(child.TestAccessor.Dynamic.ShouldSerializeFont());
+
+        child.BackColor = Color.Green;
+        child.Cursor = Cursors.WaitCursor;
+        child.ForeColor = Color.Yellow;
+        child.Font = new Font(form.Font.FontFamily, form.Font.Size + 2f, form.Font.Style);
+
+        Assert.True(child.TestAccessor.Dynamic.ShouldSerializeBackColor());
+        Assert.True(child.TestAccessor.Dynamic.ShouldSerializeCursor());
+        Assert.True(child.TestAccessor.Dynamic.ShouldSerializeForeColor());
+        Assert.True(child.TestAccessor.Dynamic.ShouldSerializeFont());
+    }
+
     public static IEnumerable<object[]> Size_Set_TestData()
     {
         yield return new object[] { new Size(-3, -4), 1 };
