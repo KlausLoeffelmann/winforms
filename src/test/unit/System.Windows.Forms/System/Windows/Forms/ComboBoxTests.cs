@@ -186,7 +186,7 @@ public class ComboBoxTests
     [InlineData(FlatStyle.Standard)]
     [InlineData(FlatStyle.Flat)]
     [InlineData(FlatStyle.Popup)]
-    public void ComboBox_ModernVisualStyles_PreferredHeightMatchesClassic(
+    public void ComboBox_ModernVisualStyles_PreferredHeightMatchesTextBox(
         FlatStyle flatStyle)
     {
         using SystemVisualSettingsTestScope settingsScope = new(
@@ -195,27 +195,26 @@ public class ComboBoxTests
         using Font font = new(
             Control.DefaultFont.FontFamily,
             11f);
-        using ComboBox classicComboBox = new()
+        using TextBox textBox = new()
         {
-            FlatStyle = flatStyle,
             Font = font,
-            VisualStylesMode = VisualStylesMode.Classic
+            VisualStylesMode = VisualStylesMode.Net11
         };
-        using ComboBox modernComboBox = new()
+        using ComboBox comboBox = new()
         {
             FlatStyle = flatStyle,
             Font = font,
             VisualStylesMode = VisualStylesMode.Net11
         };
 
-        Assert.Equal(classicComboBox.PreferredHeight, modernComboBox.PreferredHeight);
-        Assert.Equal(classicComboBox.Height, modernComboBox.Height);
+        Assert.Equal(textBox.PreferredHeight, comboBox.PreferredHeight);
+        Assert.Equal(textBox.Height, comboBox.Height);
 
-        classicComboBox.CreateControl();
-        modernComboBox.CreateControl();
+        textBox.CreateControl();
+        comboBox.CreateControl();
 
-        Assert.Equal(classicComboBox.PreferredHeight, modernComboBox.PreferredHeight);
-        Assert.Equal(classicComboBox.Height, modernComboBox.Height);
+        Assert.Equal(textBox.PreferredHeight, comboBox.PreferredHeight);
+        Assert.Equal(textBox.Height, comboBox.Height);
     }
 
     [WinFormsTheory]
@@ -400,11 +399,11 @@ public class ComboBoxTests
             form.VisualStylesMode = VisualStylesMode.Net11;
 
             Assert.Equal(control.PreferredHeight, control.Height);
-            Assert.Equal(classicControlHeight, control.Height);
-            Assert.Equal(
+            Assert.NotEqual(classicControlHeight, control.Height);
+            Assert.NotEqual(
                 classicHeight,
                 tableLayoutPanel.GetRowHeights()[0]);
-            Assert.Equal(classicTableSize, tableLayoutPanel.Size);
+            Assert.NotEqual(classicTableSize, tableLayoutPanel.Size);
             Assert.Equal(1, handleCreatedCallCount);
 
             form.VisualStylesMode = VisualStylesMode.Classic;
@@ -494,19 +493,26 @@ public class ComboBoxTests
 
         adapter.DrawFlatCombo(control, graphics);
 
+        Assert.Equal(
+            Color.Red.ToArgb(),
+            actual.GetPixel(0, 0).ToArgb());
         Assert.True(
             ColorsAreClose(
-                actual.GetPixel(0, 0),
-                Color.Red,
-                channelTolerance: 140));
-        Assert.NotEqual(
-            control.BackColor.ToArgb(),
+                actual.GetPixel(1, 0),
+                Color.Blue,
+                channelTolerance: 16));
+        Assert.Equal(
+            backgroundImage.GetPixel(
+                (actual.Width - 1) % backgroundImage.Width,
+                0).ToArgb(),
             actual.GetPixel(actual.Width - 1, 0).ToArgb());
-        Assert.NotEqual(
-            control.BackColor.ToArgb(),
+        Assert.Equal(
+            Color.Red.ToArgb(),
             actual.GetPixel(0, actual.Height - 1).ToArgb());
-        Assert.NotEqual(
-            control.BackColor.ToArgb(),
+        Assert.Equal(
+            backgroundImage.GetPixel(
+                (actual.Width - 1) % backgroundImage.Width,
+                0).ToArgb(),
             actual.GetPixel(
                 actual.Width - 1,
                 actual.Height - 1).ToArgb());
@@ -552,12 +558,11 @@ public class ComboBoxTests
         Color expectedBorder = usesAccent
             ? Application.SystemVisualSettings.AccentColor
             : ModernControlColorMath.TextControlBorderColor;
-        const int borderColorTolerance = 16;
         Assert.True(
             CountPixels(
                 actual,
                 expectedBorder,
-                channelTolerance: borderColorTolerance) > 0);
+                channelTolerance: 16) > 0);
         Assert.Equal(
             flatStyle == FlatStyle.Flat
                 ? expectedBorder.ToArgb()
@@ -691,20 +696,17 @@ public class ComboBoxTests
 
         if (flatStyle != FlatStyle.Popup)
         {
-            int disabledBorderTolerance = flatStyle == FlatStyle.Flat
-                ? 8
-                : 40;
             Assert.True(
                 CountPixels(enabledBitmap, ModernControlColorMath.TextControlBorderColor, channelTolerance: 16) > 0,
                 "Enabled ComboBox should render border with TextControlBorderColor.");
             Assert.True(
-                CountPixels(disabledBitmap, customForeColor, channelTolerance: 110) == 0,
+                CountPixels(disabledBitmap, customForeColor, channelTolerance: 16) == 0,
                 "Disabled ComboBox must not render border with the ForeColor.");
             Assert.True(
                 CountPixels(
                     disabledBitmap,
                     ModernControlColorMath.GetDisabledBorderColor(),
-                    channelTolerance: disabledBorderTolerance) > 0,
+                    channelTolerance: 8) > 0,
                 "Disabled ComboBox should render border with the disabled border color.");
         }
     }
@@ -813,12 +815,14 @@ public class ComboBoxTests
         Rectangle nativeEditBounds = control.ModernEditBaseBounds;
         Assert.False(nativeEditBounds.IsEmpty);
 
-        // Modern layout may reduce edit-window height versus native baseline because the
-        // field now reserves explicit top/bottom inset, but text must still remain readable.
-        Rectangle editBounds = control.GetEditBounds();
+        int minimumTextHeight = TextRenderer.MeasureText(
+            control.Text,
+            control.Font,
+            new Size(int.MaxValue, int.MaxValue),
+            TextFormatFlags.NoPadding).Height;
         Assert.True(
-            editBounds.Height >= control.FontHeight,
-            $"DropDownStyle={dropDownStyle}, EditHeight={editBounds.Height}, FontHeight={control.FontHeight}, NativeEditHeight={nativeEditBounds.Height}, SelectionHeight={control.GetSelectionHeight()}, PreferredHeight={control.PreferredHeight}, ControlHeight={control.Height}");
+            control.GetEditBounds().Height >= minimumTextHeight);
+            control.GetEditBounds().Height >= minimumTextHeight);
     }
 
     [WinFormsTheory]
@@ -1438,7 +1442,13 @@ public class ComboBoxTests
                     + ModernControlVisualStyles.ComboBoxFieldArcClearance,
                 deviceDpi),
             chromeInsets.Left);
-        Assert.Equal(0, chromeInsets.Top);
+        Assert.Equal(
+            ScaleHelper.ScaleToDpi(
+                ModernControlVisualStyles.BorderThickness
+                    + ModernControlVisualStyles.ComboBoxStyleInset
+                    + ModernControlVisualStyles.ComboBoxFieldArcClearance,
+                deviceDpi),
+            chromeInsets.Top);
     }
 
     [WinFormsFact]
