@@ -884,7 +884,6 @@ public class ComboBoxTests
             control.ClientSize.Height - control.ModernFieldPadding.Vertical >= minimumTextHeight);
     }
 
-
     [WinFormsTheory]
     [InlineData(ComboBoxStyle.DropDown)]
     [InlineData(ComboBoxStyle.Simple)]
