@@ -157,13 +157,6 @@ public partial class ComboBox
                 1,
                 desiredHeight
                     - ScaleNativeBaselineValue(_nativeComboBaseline.SelectionFieldFrameHeight));
-
-            if (DropDownStyle == ComboBoxStyle.DropDown && usesModernMetrics)
-            {
-                selectionFieldItemHeight = Math.Max(
-                    1,
-                    selectionFieldItemHeight - ScaleHelper.ScaleToDpi(1, DeviceDpiInternal));
-            }
         }
 
         Padding chromeInsets = usesModernMetrics
