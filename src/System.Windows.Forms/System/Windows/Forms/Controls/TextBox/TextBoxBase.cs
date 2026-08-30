@@ -2734,7 +2734,6 @@ public abstract partial class TextBoxBase : Control
     private protected virtual void OnNcPaint(Graphics graphics, HDC windowHdc)
     {
         int cornerRadius = ScaleVisualStylesMetric(ModernControlVisualStyles.FieldCornerRadius);
-        Size focusBorderMetrics = GetVisualStylesFocusBorderMetrics();
         int borderThickness = ScaleVisualStylesMetric(ModernControlVisualStyles.BorderThickness);
         int focusBandHeight = GetVisualStylesFocusBandHeight();
 
