@@ -862,7 +862,6 @@ public class ComboBoxTests
             TextFormatFlags.NoPadding).Height;
         Assert.True(
             control.GetEditBounds().Height >= minimumTextHeight);
-            control.GetEditBounds().Height >= minimumTextHeight);
     }
 
     [WinFormsTheory]
