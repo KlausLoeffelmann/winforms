@@ -34,6 +34,7 @@ function Write-TestPE([string] $path, [string] $architecture) {
 # to distinguish complete caches from partial or wrong-architecture entries first.
 function InstallDotNet($root, $version, $architecture, $runtime, $skipNonVersionedFiles, $runtimeSourceFeed, $runtimeSourceFeedKey, [switch] $noPath) {
     $installCalls.Add(@{ Root = $root; Architecture = $architecture; Runtime = $runtime; Version = $version })
+    $version = $version -replace '^(\d+\.\d+\.\d+)-rtm\.\d+\.\d+$', '$1'
     Assert-True (!(Test-Path "$root\shared\Microsoft.NETCore.App\$version")) 'Installer would skip a cached runtime directory.'
     if (!(Test-Path "$root\dotnet.exe")) {
         Write-TestPE "$root\dotnet.exe" $architecture
@@ -247,6 +248,13 @@ try {
     Assert-True ($env:DOTNET_GLOBAL_INSTALL_DIR -eq "$originalRoot\x64") 'An unexecutable SDK was not isolated before bootstrap.'
     InstallDotNetSdk $env:DOTNET_GLOBAL_INSTALL_DIR '4.0.0'
     Assert-True ($installCalls[0].Architecture -eq 'x64' -and (Get-DotNetExecutableArchitecture "$originalRoot\dotnet.exe") -eq 'arm64') 'Native bootstrap replaced the preserved ARM64 SDK.'
+
+    $installCalls = [System.Collections.Generic.List[object]]::new()
+    $rtmRoot = "$testRoot\rtm"
+    Install-WinFormsDotNetRuntime $rtmRoot 'x64' 'x64' '11.0.0-rtm.26555.108' '' ''
+    Assert-True ($installCalls.Count -eq 1 -and $installCalls[0].Version -eq '11.0.0-rtm.26555.108') 'RTM installation did not request the selected build.'
+    Install-WinFormsDotNetRuntime $rtmRoot 'x64' 'x64' '11.0.0-rtm.26555.108' '' ''
+    Assert-True ($installCalls.Count -eq 1) 'Installed GA runtime was not recognized for its RTM build version.'
 
     $installerRepo = "$testRoot\installer"
     New-Item -ItemType Directory -Path "$installerRepo\eng\common" -Force | Out-Null

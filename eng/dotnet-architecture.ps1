@@ -172,10 +172,11 @@ function Install-WinFormsDotNetRuntime(
         throw "The .NET host in '$installDir' is not $runtimeArchitecture. No files were moved."
     }
 
-    $runtimeDir = Join-Path $installDir "shared\Microsoft.NETCore.App\$version"
-    $resolverDir = Join-Path $installDir "host\fxr\$version"
+    $installedVersion = $version -replace '^(\d+\.\d+\.\d+)-rtm\.\d+\.\d+$', '$1'
+    $runtimeDir = Join-Path $installDir "shared\Microsoft.NETCore.App\$installedVersion"
+    $resolverDir = Join-Path $installDir "host\fxr\$installedVersion"
     $resolver = Join-Path $resolverDir 'hostfxr.dll'
-    if (Get-DotNetRuntimeInstallationProblem $installDir $version $runtimeArchitecture) {
+    if (Get-DotNetRuntimeInstallationProblem $installDir $installedVersion $runtimeArchitecture) {
         $compatibleResolver = (Test-Path -LiteralPath $resolver -PathType Leaf) -and
             (Get-DotNetExecutableArchitecture $resolver) -eq $runtimeArchitecture
         # Arcade's cache check only tests the directory's existence. Move an incomplete
@@ -190,7 +191,7 @@ function Install-WinFormsDotNetRuntime(
         }
 
         InstallDotNet $installDir $version $runtimeArchitecture 'dotnet' $true $runtimeSourceFeed $runtimeSourceFeedKey -noPath
-        $problem = Get-DotNetRuntimeInstallationProblem $installDir $version $runtimeArchitecture
+        $problem = Get-DotNetRuntimeInstallationProblem $installDir $installedVersion $runtimeArchitecture
         if ($problem) {
             throw "The $runtimeArchitecture runtime $version installation is incomplete or incompatible: $problem. Previous files were preserved under '$installDir\legacy-runtimes'."
         }
